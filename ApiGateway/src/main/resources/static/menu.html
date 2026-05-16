@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory-Deus — Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="topbar">
+  <div class="brand">INV<span>.</span>PORTAL</div>
+  <div class="topbar-right">
+    <div class="user-text">Signed in as <b id="who">…</b></div>
+    <button class="logout" onclick="logout()">LOGOUT</button>
+  </div>
+</nav>
+
+<main class="page">
+  <h1>Services</h1>
+  <p class="sub">Click a service to open its dashboard. Each tile pings the service's <code>/health</code> endpoint.</p>
+  <div class="grid" id="grid"></div>
+  <p class="foot-note">
+    Services are pinged every 2 seconds. Start a service from its terminal to see it light up.
+  </p>
+</main>
+
+<div class="modal-back" id="modal-back">
+  <div class="modal modal-danger" onclick="event.stopPropagation()">
+    <button class="modal-x" onclick="closeModal()">×</button>
+    <div class="modal-tag">Service Offline</div>
+    <div class="modal-title">Service not running</div>
+    <div class="modal-body">Please start <b id="modal-svc">the service</b> to access its dashboard.</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  if (requireAuth()) {
+    const u = getUser();
+    document.getElementById('who').textContent = u ? u.email : 'user';
+    startHeartbeat();
+  }
+
+  // id: matches the gateway's serviceUrls map key.
+  // healthPath: explicit path the gateway can reach for this service's /health.
+  // uiPath: opening tile lands here.
+  const services = [
+    { id: 'auth-service', name: 'Auth',          desc: 'Users, roles, permissions',  healthPath: '/health/auth-service', uiPath: '/ui/auth-service/index.html' },
+    { id: 'catalog',      name: 'Catalog',       desc: 'SKUs, categories, products', healthPath: '/health/catalog', uiPath: '/ui/catalog/index.html' },
+    { id: 'uom',          name: 'UoM',           desc: 'Units & conversions',        healthPath: '/health/uom' },
+    { id: 'warehouse',    name: 'Warehouse',     desc: 'Warehouses, zones, bins',    healthPath: '/health/warehouse' },
+    { id: 'supplier',     name: 'Supplier',      desc: 'Suppliers & contacts',       healthPath: '/health/supplier' },
+    { id: 'procurement',  name: 'Procurement',   desc: 'Purchase orders, GRNs',      healthPath: '/health/procurement' },
+    { id: 'sales',        name: 'Sales',         desc: 'Sales orders & allocations', healthPath: '/health/sales' },
+    { id: 'inventory',    name: 'Inventory',     desc: 'Stock levels & adjustments', healthPath: '/health/inventory' },
+    { id: 'movement',     name: 'Movement',      desc: 'Transfers & adjustments',    healthPath: '/health/movement' },
+    { id: 'receiving',    name: 'Receiving',     desc: 'Goods receipt & putaway',    healthPath: '/health/receiving' },
+    { id: 'fulfillment',  name: 'Fulfillment',   desc: 'Picking, packing, shipping', healthPath: '/health/fulfillment' },
+    { id: 'replenishment',name: 'Replenishment', desc: 'Auto-replenish & reorder',   healthPath: '/health/replenishment' },
+    { id: 'audit',        name: 'Audit',         desc: 'Counts & adjustments',       healthPath: '/health/audit' },
+    { id: 'notification', name: 'Notifications', desc: 'Alerts & subscribers',       healthPath: '/health/notification' },
+    { id: 'reporting',    name: 'Reporting',     desc: 'Reports & metrics',          healthPath: '/health/reporting' },
+    { id: 'pricing',      name: 'Pricing',       desc: 'Price books & rules',        healthPath: '/health/pricing' },
+  ];
+
+  const status = {};
+  const grid = document.getElementById('grid');
+  grid.innerHTML = services.map(s => {
+    const href = s.uiPath || `/ui/${s.id}/index.html`;
+    return `
+      <a class="tile" id="tile-${s.id}" href="${href}"
+         onclick="return handleClick(event, '${s.id}', '${s.name}')">
+        <div class="tile-name">${s.name}</div>
+        <div class="tile-desc">${s.desc}</div>
+        <div class="tile-status">
+          <span class="dot" id="dot-${s.id}"></span>
+          <span id="st-${s.id}">checking…</span>
+        </div>
+      </a>
+    `;
+  }).join('');
+
+  function handleClick(e, id, name) {
+    if (status[id] !== 'up') {
+      e.preventDefault();
+      document.getElementById('modal-svc').textContent = name + ' service';
+      document.getElementById('modal-back').classList.add('show');
+      return false;
+    }
+    return true;
+  }
+
+  function closeModal() {
+    document.getElementById('modal-back').classList.remove('show');
+  }
+  document.getElementById('modal-back').addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  async function pingHealth() {
+    for (const s of services) {
+      let up = false;
+      try {
+        const r = await fetch(s.healthPath);
+        if (r.ok) {
+          const j = await r.json();
+          up = (j.status === 'UP');
+        }
+      } catch {}
+      status[s.id] = up ? 'up' : 'down';
+      const dot = document.getElementById('dot-' + s.id);
+      const lbl = document.getElementById('st-' + s.id);
+      if (dot) dot.className = 'dot ' + (up ? 'up' : 'down');
+      if (lbl) lbl.textContent = up ? 'online' : 'down';
+    }
+  }
+  pingHealth();
+  setInterval(pingHealth, 2000);
+</script>
+</body>
+</html>

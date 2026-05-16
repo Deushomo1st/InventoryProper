@@ -1,0 +1,25 @@
+ApiGateway/
+├── pom.xml
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/inventory/apigateway/
+│       │       ├── ApiGatewayApplication.java       ← main class
+│       │       ├── config/
+│       │       │   └── SecurityConfig.java          ← security filter chain
+│       │       ├── filter/
+│       │       │   └── JwtAuthFilter.java           ← JWT verification filter
+│       │       ├── controller/
+│       │       │   └── RouteController.java         ← forwards to downstream services (optional, if you route through controllers)
+│       │       └── util/
+│       │           └── JwtUtil.java                 ← JWT parsing helper
+│       └── resources/
+│           ├── application.properties               ← server port, JWT secret, Eureka config
+│           └── static/
+│               ├── login.html                       ← login page
+│               ├── menu.html                        ← dashboard with service tiles
+│               ├── css/
+│               │   └── style.css
+│               └── js/
+│                   └── app.js                       ← apiFetch, logout, token storage
+└── target/                                          ← generated, ignore

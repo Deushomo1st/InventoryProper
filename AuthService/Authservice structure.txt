@@ -1,0 +1,33 @@
+AuthService/
+├── pom.xml
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/inventory/authservice/
+│       │       ├── AuthServiceApplication.java
+│       │       ├── config/
+│       │       │   └── SecurityConfig.java
+│       │       ├── model/
+│       │       │   ├── AppUser.java
+│       │       │   ├── Role.java
+│       │       │   ├── Permission.java
+│       │       │   ├── UserRole.java
+│       │       │   ├── RolePermission.java
+│       │       │   └── WarehouseAccess.java
+│       │       ├── repository/
+│       │       │   ├── AppUserRepository.java
+│       │       │   ├── RoleRepository.java
+│       │       │   ├── PermissionRepository.java
+│       │       │   └── WarehouseAccessRepository.java
+│       │       ├── dto/
+│       │       │   ├── LoginRequest.java
+│       │       │   ├── LoginResponse.java
+│       │       │   └── RegisterRequest.java
+│       │       ├── service/
+│       │       │   └── AuthService.java
+│       │       ├── controller/
+│       │       │   └── AuthController.java
+│       │       └── util/
+│       │           └── JwtUtil.java
+│       └── resources/
+│           └── application.properties

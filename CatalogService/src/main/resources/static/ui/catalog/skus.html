@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SKUs — Catalog Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Catalog Service',
+        page: 'SKUs',
+        tabs: [
+            { href: '/ui/catalog/index.html', label: 'Overview' },
+            { href: '/ui/catalog/categories.html', label: 'Categories' },
+            { href: '/ui/catalog/products.html', label: 'Products' },
+            { href: '/ui/catalog/skus.html', label: 'SKUs' },
+            { href: '/ui/catalog/attributes.html', label: 'Attributes' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>SKUs</h2>
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW SKU</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>SKU Code</th>
+            <th>Name</th>
+            <th>Product</th>
+            <th>UoM ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">×</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create SKU</div>
+        <form id="form">
+            <input type="hidden" id="sku-id">
+            <div class="form-group">
+                <label for="sku-code">SKU Code</label>
+                <input type="text" id="sku-code" required>
+            </div>
+            <div class="form-group">
+                <label for="sku-name">Name</label>
+                <input type="text" id="sku-name" required>
+            </div>
+            <div class="form-group">
+                <label for="sku-product">Product</label>
+                <select id="sku-product" required>
+                    <option value="">— Select —</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sku-uom">Unit of Measure ID</label>
+                <input type="number" id="sku-uom" required>
+                <small>Cross-service reference. UoM service must be running.</small>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="sku-active" checked>
+                <label for="sku-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function load() {
+        try {
+            const res = await apiFetch('/catalog/skus');
+            if (!res) return;
+            const skus = await res.json();
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = skus.map(s => `
+        <tr>
+          <td>${s.skuCode}</td>
+          <td>${s.name}</td>
+          <td>${s.productName || '—'}</td>
+          <td>${s.uomId || '—'}</td>
+          <td><span class="pill ${s.active ? 'active' : 'inactive'}">${s.active ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editSku(${s.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteSku(${s.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadProducts(selectedId) {
+        try {
+            const res = await apiFetch('/catalog/products');
+            if (!res) return;
+            const products = await res.json();
+            const sel = document.getElementById('sku-product');
+            sel.innerHTML = '<option value="">— Select —</option>';
+            products.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.name} (${p.code})</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create SKU';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('sku-id').value = '';
+        document.getElementById('sku-active').checked = true;
+        loadProducts(null);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editSku(id) {
+        try {
+            const res = await apiFetch(`/catalog/skus/${id}`);
+            if (!res) return;
+            const s = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit SKU';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('sku-id').value = s.id;
+            document.getElementById('sku-code').value = s.skuCode;
+            document.getElementById('sku-name').value = s.name;
+            document.getElementById('sku-uom').value = s.uomId || '';
+            document.getElementById('sku-active').checked = s.active;
+            loadProducts(s.productId);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load SKU' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('sku-id').value;
+        const body = {
+            skuCode: document.getElementById('sku-code').value,
+            name: document.getElementById('sku-name').value,
+            productId: parseInt(document.getElementById('sku-product').value),
+            uomId: parseInt(document.getElementById('sku-uom').value),
+            active: document.getElementById('sku-active').checked
+        };
+
+        try {
+            const url = id ? `/catalog/skus/${id}` : '/catalog/skus';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save SKU', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save SKU' });
+        }
+    });
+
+    function deleteSku(id) {
+        confirmDanger({
+            title: 'Delete SKU?',
+            body: 'This is permanent. If this SKU is referenced by purchase orders or inventory, deletion will be rejected.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/catalog/skus/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete SKU', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete SKU' });
+                }
+            }
+        });
+    }
+
+    load();
+</script>
+</body>
+</html>

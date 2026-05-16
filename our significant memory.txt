@@ -1,0 +1,59 @@
+# Project: Inventory-Deus / InventoryProper
+
+You're joining an in-progress Spring Boot microservices project. Read in this order before responding:
+
+1. `C:\Users\Deus\Desktop\Springworld\InventoryProper\project-context.txt` — authoritative summary, design decisions, hard rules
+2. `C:\Users\Deus\Desktop\Springworld\InventoryProper\Inventory-Deus-Authentication.pdf` — JWT model, claims, per-service trust
+3. `C:\Users\Deus\Desktop\Springworld\InventoryProper\Inventory-Deus-Entities.pdf` — what each entity represents
+4. `C:\Users\Deus\Desktop\Springworld\InventoryProper\Inventory-Deus-Table-Connections.pdf` — every PK/FK across services
+5. `C:\Users\Deus\Desktop\Springworld\InventoryProper\read heirarchy.pdf` — Tier 0→4 build order
+
+## Reference implementation
+
+Tier 0 is built. **Mimic the auth-service pattern** when adding any new service. Specifically, study these files end-to-end before writing anything:
+
+- Backend skeleton: `InventoryProper\AuthService\src\main\java\com\inventory\authservice\`
+  - `config\SecurityConfig.java`, `filter\JwtAuthFilter.java`, `util\JwtUtil.java` — copy verbatim, only the package changes
+  - `controller\AuthController.java`, `service\AuthService.java` — domain methods structure
+  - `model\*.java`, `repository\*.java` — JPA patterns, schema-per-service
+- Frontend skeleton: `InventoryProper\AuthService\src\main\resources\static\`
+  - `login.html`, `css\style.css`, `js\app.js` — these are **byte-identical mirrors of the gateway's copies**. Required for dual-mode access. Do NOT delete them as "duplicate dead code."
+  - `ui\auth-service\index.html`, `users.html`, `roles.html`, `permissions.html` — these use `renderAppShell` from `app.js`, themed CSS classes (`.page`, `.toolbar`, `.data-table`, `.modal-back`/`.modal`/`.modal-x`, `.btn-accent`, `.btn-ghost`, `.action-link`, `.pill`, `.form-group`, `.form-row`, `.perm-group`)
+- Gateway: `InventoryProper\ApiGateway\` — same shape, plus `RouteController.java` for proxy routing
+
+## Hard rules (do not violate)
+
+1. Every downstream service has its own `JwtAuthFilter` wired into `SecurityConfig` via `addFilterBefore`. Services do not trust the gateway — they trust the JWT signature.
+2. JWT secret is shared via `INVENTORY_JWT_SECRET` env var. Never hardcode.
+3. **Dual-access mode is mandatory.** Each service runs through the gateway (`:9000/ui/{service}/...`) AND directly on its own port. Each service has its OWN copy of `static/login.html`, `static/js/app.js`, `static/css/style.css` — keep them byte-identical with the gateway's. These are intentional duplicates, not dead code.
+4. `sessionStorage` keys: `inv_jwt`, `inv_user`. User object: `{ id, email }`.
+5. Plain HTML/CSS/JS only. No framework. No build step. No npm.
+6. UTF-8 forced in `application.properties` of every service.
+7. Permissions live in JWT claims (computed at login). Permission/role changes require re-login.
+8. 401 = "I don't know who you are" → client bounces to login. 403 = "I know you, not allowed" → show error. Never collapse them.
+9. Theme tokens are in `:root` of `style.css`. Use them — never hardcode colors. Accent is `#00ff88` (green glow), surface `#111118`, border `#2a2a3a`.
+
+## Mistakes prior AIs made
+
+- Deleted the auth-service's duplicate `static/js/app.js` and `static/css/style.css` thinking they were dead code → broke direct-access mode.
+- Wrote pages using `.container`, `.service-content`, `.service-toolbar` CSS classes that don't exist → page renders as unstyled browser defaults next to themed pages.
+- Built modals with `style="display:none"` toggled by `style.display = 'block'` → wrong pattern; we use `.modal-back` wrapper + `.classList.add('show')` for backdrop blur and animation.
+- Added a `Permissions` tab linking to a page that didn't exist → 404 on click.
+- Stripped `/ui/{service}` prefix in `RouteController` before forwarding → broke static file serving on downstream services.
+
+## TASK
+
+<single sentence: what you want done>
+
+Scope IN: <specific files / endpoints / behavior>
+Scope OUT: <"don't refactor X", "don't add Y">
+
+## Acceptance
+
+<concrete: "after this, X works when I click Y" or "the file at path Z contains W">
+
+Before writing code, confirm in one line which existing file you'll mimic as the template. Then make the changes. Do not write summaries or docs files unless I ask.
+How to use it
+Save the part above the ## TASK block as a snippet (Cursor rules file, Copilot custom instructions, JetBrains scratch file — wherever your IDE AI takes persistent context).
+For each new request, append a fresh ## TASK and ## Acceptance block.
+The "Mistakes prior AIs made" section is the most underrated piece — every burn we hit in this conversation goes there. Update it as you hit new ones. That list is what makes the next AI faster than the last.
