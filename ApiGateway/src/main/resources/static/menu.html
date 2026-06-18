@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Inventory-Deus — Services</title>
+<title>ElectDeptSoftware — Services</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <nav class="topbar">
-  <div class="brand">INV<span>.</span>PORTAL</div>
+  <div class="brand">EDS<span>.</span>PORTAL</div>
   <div class="topbar-right">
     <div class="user-text">Signed in as <b id="who">…</b></div>
     <button class="logout" onclick="logout()">LOGOUT</button>
@@ -18,7 +18,19 @@
 <main class="page">
   <h1>Services</h1>
   <p class="sub">Click a service to open its dashboard. Each tile pings the service's <code>/health</code> endpoint.</p>
-  <div class="grid" id="grid"></div>
+
+  <h2 class="group-title">Core Electrical Engineering</h2>
+  <div class="grid" id="grid-core"></div>
+
+  <h2 class="group-title">Operations &amp; Field</h2>
+  <div class="grid" id="grid-ops"></div>
+
+  <h2 class="group-title">Business &amp; Compliance</h2>
+  <div class="grid" id="grid-biz"></div>
+
+  <h2 class="group-title">Platform</h2>
+  <div class="grid" id="grid-plat"></div>
+
   <p class="foot-note">
     Services are pinged every 2 seconds. Start a service from its terminal to see it light up.
   </p>
@@ -47,30 +59,45 @@
   // id: matches the gateway's serviceUrls map key.
   // healthPath: explicit path the gateway can reach for this service's /health.
   // uiPath: opening tile lands here.
+  // group: which dashboard section to render in.
   const services = [
-    { id: 'auth-service', name: 'Auth',          desc: 'Users, roles, permissions',  healthPath: '/health/auth-service', uiPath: '/ui/auth-service/index.html' },
-    { id: 'catalog',      name: 'Catalog',       desc: 'SKUs, categories, products', healthPath: '/health/catalog', uiPath: '/ui/catalog/index.html' },
-    { id: 'uom',          name: 'UoM',           desc: 'Units & conversions',        healthPath: '/health/uom' },
-    { id: 'warehouse',    name: 'Warehouse',     desc: 'Warehouses, zones, bins',    healthPath: '/health/warehouse' },
-    { id: 'supplier',     name: 'Supplier',      desc: 'Suppliers & contacts',       healthPath: '/health/supplier' },
-    { id: 'procurement',  name: 'Procurement',   desc: 'Purchase orders, GRNs',      healthPath: '/health/procurement' },
-    { id: 'sales',        name: 'Sales',         desc: 'Sales orders & allocations', healthPath: '/health/sales' },
-    { id: 'inventory',    name: 'Inventory',     desc: 'Stock levels & adjustments', healthPath: '/health/inventory' },
-    { id: 'movement',     name: 'Movement',      desc: 'Transfers & adjustments',    healthPath: '/health/movement' },
-    { id: 'receiving',    name: 'Receiving',     desc: 'Goods receipt & putaway',    healthPath: '/health/receiving' },
-    { id: 'fulfillment',  name: 'Fulfillment',   desc: 'Picking, packing, shipping', healthPath: '/health/fulfillment' },
-    { id: 'replenishment',name: 'Replenishment', desc: 'Auto-replenish & reorder',   healthPath: '/health/replenishment' },
-    { id: 'audit',        name: 'Audit',         desc: 'Counts & adjustments',       healthPath: '/health/audit' },
-    { id: 'notification', name: 'Notifications', desc: 'Alerts & subscribers',       healthPath: '/health/notification' },
-    { id: 'reporting',    name: 'Reporting',     desc: 'Reports & metrics',          healthPath: '/health/reporting' },
-    { id: 'pricing',      name: 'Pricing',       desc: 'Price books & rules',        healthPath: '/health/pricing' },
+    // Core Electrical Engineering
+    { group: 'core', id: 'loadcalc',     name: 'Load Calculation',      desc: 'Load flow, short circuit, voltage drop', healthPath: '/health/loadcalc',     uiPath: '/ui/loadcalc/index.html' },
+    { group: 'core', id: 'circuit',      name: 'Circuit Design',        desc: 'Single-line diagrams, panel schedules',  healthPath: '/health/circuit',      uiPath: '/ui/circuit/index.html' },
+    { group: 'core', id: 'protection',   name: 'Protection Coordination', desc: 'Breakers, fuses, TCC curves',          healthPath: '/health/protection',   uiPath: '/ui/protection/index.html' },
+    { group: 'core', id: 'cablesizing',  name: 'Cable Sizing',          desc: 'IEC/NEC ampacity, derating, conduit fill', healthPath: '/health/cablesizing', uiPath: '/ui/cablesizing/index.html' },
+    { group: 'core', id: 'energy',       name: 'Energy Monitoring',     desc: 'Meter data, kWh, power factor, demand',  healthPath: '/health/energy',       uiPath: '/ui/energy/index.html' },
+
+    // Operations & Field
+    { group: 'ops',  id: 'asset',        name: 'Asset Management',      desc: 'Transformers, breakers, relays, maintenance', healthPath: '/health/asset',     uiPath: '/ui/asset/index.html' },
+    { group: 'ops',  id: 'workorder',    name: 'Work Order',            desc: 'Dispatch jobs to crews and electricians', healthPath: '/health/workorder',  uiPath: '/ui/workorder/index.html' },
+    { group: 'ops',  id: 'outage',       name: 'Outage Management',     desc: 'Fault detection, restoration tracking',  healthPath: '/health/outage',     uiPath: '/ui/outage/index.html' },
+    { group: 'ops',  id: 'scada',        name: 'SCADA Integration',     desc: 'RTU/PLC/IED real-time data ingest',      healthPath: '/health/scada',      uiPath: '/ui/scada/index.html' },
+    { group: 'ops',  id: 'gis',          name: 'GIS Mapping',           desc: 'Substations, feeders, poles on maps',    healthPath: '/health/gis',        uiPath: '/ui/gis/index.html' },
+
+    // Business & Compliance
+    { group: 'biz',  id: 'billing',      name: 'Billing & Tariff',      desc: 'TOU rates, net metering, demand charges', healthPath: '/health/billing',   uiPath: '/ui/billing/index.html' },
+    { group: 'biz',  id: 'regulatory',   name: 'Regulatory Reporting',  desc: 'NERC, IEEE, NEPA compliance reports',    healthPath: '/health/regulatory', uiPath: '/ui/regulatory/index.html' },
+    { group: 'biz',  id: 'document',     name: 'Document Management',   desc: 'As-builts, test reports, O&M manuals',   healthPath: '/health/document',   uiPath: '/ui/document/index.html' },
+    { group: 'biz',  id: 'auth-service', name: 'Auth & Permissions',    desc: 'Engineers, techs, contractors',          healthPath: '/health/auth-service', uiPath: '/ui/auth-service/index.html' },
+
+    // Platform
+    { group: 'plat', id: 'uom',          name: 'Units of Measure',      desc: 'V, A, W, VA, var, Hz, kWh, kVAR',       healthPath: '/health/uom',         uiPath: '/ui/uom/index.html' },
+    { group: 'plat', id: 'audit',        name: 'Audit Trail',           desc: 'Cross-service event log',                healthPath: '/health/audit',       uiPath: '/ui/audit/index.html' },
+    { group: 'plat', id: 'notification', name: 'Notifications',         desc: 'Outage alerts, work-order assignments',  healthPath: '/health/notification', uiPath: '/ui/notification/index.html' },
   ];
 
   const status = {};
-  const grid = document.getElementById('grid');
-  grid.innerHTML = services.map(s => {
+  const groupContainers = {
+    core: document.getElementById('grid-core'),
+    ops:  document.getElementById('grid-ops'),
+    biz:  document.getElementById('grid-biz'),
+    plat: document.getElementById('grid-plat')
+  };
+
+  services.forEach(s => {
     const href = s.uiPath || `/ui/${s.id}/index.html`;
-    return `
+    const tile = `
       <a class="tile" id="tile-${s.id}" href="${href}"
          onclick="return handleClick(event, '${s.id}', '${s.name}')">
         <div class="tile-name">${s.name}</div>
@@ -81,7 +108,10 @@
         </div>
       </a>
     `;
-  }).join('');
+    if (groupContainers[s.group]) {
+      groupContainers[s.group].insertAdjacentHTML('beforeend', tile);
+    }
+  });
 
   function handleClick(e, id, name) {
     if (status[id] !== 'up') {

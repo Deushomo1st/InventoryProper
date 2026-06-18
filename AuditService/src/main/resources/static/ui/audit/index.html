@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Service - Overview</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Audit Service', 
+                page: 'Overview', 
+                tabs: [
+                    {href:'/ui/audit/index.html', label:'Overview'},
+                    {href:'/ui/audit/events.html', label:'Events'}
+                ] 
+            });
+        </script>
+
+        <div class="tile-grid" style="margin-top: 2rem;">
+            <a href="/ui/audit/events.html" class="tile">
+                <div class="tile-icon">📋</div>
+                <div class="tile-title">Audit Events</div>
+                <div class="tile-desc">View system-wide audit trail and sync ledger</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

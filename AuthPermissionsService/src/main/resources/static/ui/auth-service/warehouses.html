@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Substation Access &mdash; Auth & Permissions Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+  renderAppShell({
+    service: 'Auth & Permissions Service',
+    page: 'Substation Access',
+    tabs: [
+      { href: '/ui/auth-service/index.html', label: 'Overview' },
+      { href: '/ui/auth-service/users.html', label: 'Users' },
+      { href: '/ui/auth-service/roles.html', label: 'Roles' },
+      { href: '/ui/auth-service/permissions.html', label: 'Permissions' },
+      { href: '/ui/auth-service/warehouses.html', label: 'Warehouses' }
+    ]
+  });
+</script>
+
+<main class="page">
+  <div class="toolbar">
+    <h2>Substation Access</h2>
+    <input type="text" id="user-search" class="search-input" placeholder="Search by email&hellip;" autocomplete="off">
+  </div>
+
+  <table class="data-table" id="users-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Manager</th>
+        <th>Warehouses</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</main>
+
+<!-- Manage Warehouses modal -->
+<div class="modal-back" id="modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-x" onclick="closeModal()">&times;</button>
+    <div class="modal-tag" id="modal-tag">Manage</div>
+    <div class="modal-title" id="modal-title">Manage Substation Access</div>
+    <div class="modal-hint" id="modal-hint">Tick warehouses to grant access. Untick to revoke.</div>
+    <form id="form">
+      <input type="hidden" id="user-id">
+      <div class="form-group">
+        <label>User</label>
+        <div id="user-email-display" style="font-family: var(--mono); color: var(--accent);">&mdash;</div>
+      </div>
+      <div class="form-group">
+        <label>Warehouses</label>
+        <div id="wh-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+        <button type="submit" class="btn-accent">SAVE</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let allUsers = [];
+  let allWarehouses = [];
+  let currentUserWarehouses = new Set();
+
+  async function loadUsers() {
+    try {
+      const res = await apiFetch('/auth/users');
+      if (!res || !res.ok) return;
+      allUsers = await res.json();
+      renderUsers();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderUsers() {
+    const q = (document.getElementById('user-search').value || '').trim().toLowerCase();
+    const filtered = q
+      ? allUsers.filter(u => (u.email || '').toLowerCase().includes(q) || String(u.id).includes(q))
+      : allUsers;
+    const tbody = document.getElementById('tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No users match &quot;' + q + '&quot;' : 'No users yet'}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = filtered.map(u => {
+      const whBadges = (u.warehouses && u.warehouses.length > 0)
+        ? u.warehouses.map(id => `<span class="pill">WH ${id}</span>`).join(' ')
+        : '<span style="color: var(--muted);">&mdash;</span>';
+      const managerBadge = u.manager
+        ? '<span class="pill active">Manager</span>'
+        : '<span style="color: var(--muted);">&mdash;</span>';
+      return `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.email}</td>
+          <td>${managerBadge}</td>
+          <td>${whBadges}</td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="openManageModal(${u.id})">Manage</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadWarehouses() {
+    const res = await apiFetch('/gis/substations');
+    if (!res || !res.ok) throw new Error('WarehouseService');
+    allWarehouses = await res.json();
+  }
+
+  async function fetchUserDetail(userId) {
+    const res = await apiFetch(`/auth/users/${userId}`);
+    if (!res || !res.ok) throw new Error('AuthService');
+    return await res.json();
+  }
+
+  async function openManageModal(userId) {
+    try {
+      const [user] = await Promise.all([
+        fetchUserDetail(userId),
+        loadWarehouses()
+      ]);
+      currentUserWarehouses = new Set((user.warehouses || []).map(id => Number(id)));
+      document.getElementById('user-id').value = user.id;
+      document.getElementById('user-email-display').textContent = user.email;
+      const whList = document.getElementById('wh-list');
+      if (allWarehouses.length === 0) {
+        whList.innerHTML = '<span style="color: var(--muted); font-family: var(--mono); font-size: 12px;">No warehouses exist. Create some in WarehouseService first.</span>';
+      } else {
+        whList.innerHTML = allWarehouses.map(w => {
+          const checked = currentUserWarehouses.has(Number(w.id)) ? 'checked' : '';
+          return `
+            <label class="form-row" style="cursor: pointer;">
+              <input type="checkbox" class="wh-cb" data-wh-id="${w.id}" ${checked}>
+              <span><strong>${w.code || ('WH-' + w.id)}</strong> &mdash; ${w.name || ''}</span>
+            </label>
+          `;
+        }).join('');
+      }
+      document.getElementById('modal').classList.add('show');
+    } catch (err) {
+      alertModal({
+        title: `${err.message || 'Error'} unavailable`,
+        body: `Could not load warehouses. Start ${err.message || 'the required service'} and try again.`
+      });
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('show');
+  }
+  document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  document.getElementById('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const userId = document.getElementById('user-id').value;
+    const checkedIds = new Set(
+      Array.from(document.querySelectorAll('.wh-cb:checked')).map(cb => Number(cb.dataset.whId))
+    );
+
+    // Diff: grants are checked-but-not-current, revokes are current-but-not-checked.
+    const grants = [...checkedIds].filter(id => !currentUserWarehouses.has(id));
+    const revokes = [...currentUserWarehouses].filter(id => !checkedIds.has(id));
+
+    if (grants.length === 0 && revokes.length === 0) {
+      closeModal();
+      return;
+    }
+
+    try {
+      for (const whId of grants) {
+        const r = await apiFetch(`/auth/users/${userId}/warehouses/${whId}`, { method: 'POST' });
+        if (!r || !r.ok) {
+          const err = await r.json().catch(() => ({}));
+          alertModal({ title: 'Failed to grant warehouse access', body: err.message || `WH ${whId}` });
+          return;
+        }
+      }
+      for (const whId of revokes) {
+        const r = await apiFetch(`/auth/users/${userId}/warehouses/${whId}`, { method: 'DELETE' });
+        if (!r || !r.ok) {
+          const err = await r.json().catch(() => ({}));
+          alertModal({ title: 'Failed to revoke warehouse access', body: err.message || `WH ${whId}` });
+          return;
+        }
+      }
+      closeModal();
+      loadUsers();
+    } catch (err) {
+      console.error(err);
+      alertModal({ title: 'Failed to save warehouse access' });
+    }
+  });
+
+  loadUsers();
+  document.getElementById('user-search').addEventListener('input', renderUsers);
+</script>
+</body>
+</html>

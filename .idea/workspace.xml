@@ -1,0 +1,872 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ade08096-1f3d-473a-bd34-f58904129b2b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/AssetManagementServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/model/AssetClass.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/repository/AssetClassRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/repository/AssetModelRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/repository/AssetRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/repository/AssetSpecRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/service/AssetService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AssetManagementService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/controller/AuditEventController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/model/AuditEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/repository/AuditEventRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/service/AuditEventService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/resources/static/ui/audit/events.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/main/resources/static/ui/audit/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuditService/src/test/java/com/electdept/auditservice/AuditServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/client/AuditClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/client/NotificationClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/ui/auth-service/warehouses.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AuthPermissionsService/src/test/java/com/electdept/authpermissionsservice/AuthPermissionsServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.mvn/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/BillingTariffServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/controller/QuoteController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/controller/RateAdjustmentController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/controller/TariffScheduleController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/model/RateAdjustment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/model/TariffRate.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/model/TariffSchedule.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/repository/RateAdjustmentRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/repository/TariffRateRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/repository/TariffScheduleRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/service/QuoteService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/service/RateAdjustmentService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/service/TariffScheduleService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/java/com/electdept/billingtariffservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BillingTariffService/src/test/java/com/electdept/billingtariffservice/BillingTariffServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.mvn/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/CableSizingServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/client/InventoryClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/client/ProcurementClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/controller/CableSizingRequestController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/controller/CableSizingResultController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/model/CableSizingRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/model/CableSizingResult.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/repository/CableSizingRequestRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/repository/CableSizingResultRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/service/CableSizingRequestService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/service/CableSizingResultService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/java/com/electdept/cablesizingservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CableSizingService/src/test/java/com/electdept/cablesizingservice/LoadCalculationServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/CircuitDesignServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/client/InventoryClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/controller/CircuitDiagramController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/model/CircuitDiagram.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/model/DiagramElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/repository/CircuitDiagramRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/repository/DiagramElementRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/service/CircuitDiagramService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/java/com/electdept/circuitdesignservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CircuitDesignService/src/test/java/com/electdept/circuitdesignservice/CircuitDesignServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/DocumentManagementServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/controller/DocumentController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/controller/DocumentRevisionController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/controller/ReviewerController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/model/Document.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/model/DocumentRevision.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/model/Reviewer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/repository/DocumentRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/repository/DocumentRevisionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/repository/ReviewerRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/service/DocumentRevisionService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/service/DocumentService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/service/ReviewerService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/java/com/electdept/documentmanagementservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DocumentManagementService/src/test/java/com/electdept/documentmanagementservice/DocumentManagementServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/EnergyMonitoringServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/controller/AdjustmentController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/controller/CurrentReadingController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/controller/MeterReadingController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/model/CurrentReading.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/model/MeterReading.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/repository/CurrentReadingRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/repository/MeterReadingRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/service/CurrentReadingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/service/MeterReadingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/java/com/electdept/energymonitoringservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EnergyMonitoringService/src/test/java/com/electdept/energymonitoringservice/EnergyMonitoringServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/GISMappingServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/controller/FeederController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/controller/PoleController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/controller/SubstationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/model/Feeder.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/model/Pole.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/model/Substation.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/repository/FeederRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/repository/PoleRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/repository/SubstationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/service/FeederService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/service/PoleService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/service/SubstationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/java/com/electdept/gismappingservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GISMappingService/src/test/java/com/electdept/gismappingservice/GISMappingServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.mvn/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/LoadCalculationServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/client/InventoryClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/client/ProcurementClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/controller/LoadCalcRequestController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/controller/LoadCalcResultController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/model/LoadCalcRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/model/LoadCalcResult.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/repository/LoadCalcRequestRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/repository/LoadCalcResultRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/service/LoadCalcRequestService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/service/LoadCalcResultService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/java/com/electdept/loadcalculationservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LoadCalculationService/src/test/java/com/electdept/loadcalculationservice/LoadCalculationServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.mvn/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/NotificationServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/controller/NotificationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/controller/NotificationTemplateController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/model/Notification.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/model/NotificationTemplate.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/repository/NotificationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/repository/NotificationTemplateRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/service/NotificationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/service/NotificationTemplateService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/java/com/electdept/notificationservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/static/ui/notification/inbox.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/static/ui/notification/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/main/resources/static/ui/notification/templates.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotificationService/src/test/java/com/electdept/notificationservice/NotificationServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/OutageManagementServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/client/InventoryClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/controller/OutageEventController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/model/AffectedAsset.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/model/OutageEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/repository/AffectedAssetRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/repository/OutageEventRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/service/OutageEventService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/java/com/electdept/outagemanagementservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/OutageManagementService/src/test/java/com/electdept/outagemanagementservice/OutageManagementServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PROGRESS-INVENTORY-LEGACY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/ProtectionCoordinationServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/controller/CoordinationStudyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/controller/ProtectionSchemeController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/model/CoordinationStudy.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/model/DeviceSelection.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/model/ProtectionScheme.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/repository/CoordinationStudyRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/repository/DeviceSelectionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/repository/ProtectionSchemeRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/service/CoordinationStudyService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/service/ProtectionSchemeService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/java/com/electdept/protectioncoordinationservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ProtectionCoordinationService/src/test/java/com/electdept/protectioncoordinationservice/ProtectionCoordinationServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.mvn/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/RegulatoryReportingServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/controller/ReportController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/service/ReportService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/java/com/electdept/regulatoryreportingservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RegulatoryReportingService/src/test/java/com/electdept/regulatoryreportingservice/RegulatoryReportingServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/SCADAIntegrationServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/client/InventoryClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/controller/TelemetryBatchController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/model/TelemetryBatch.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/model/TelemetryReading.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/repository/TelemetryBatchRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/repository/TelemetryReadingRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/service/TelemetryBatchService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/java/com/electdept/scadaintegrationservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SCADAIntegrationService/src/test/java/com/electdept/scadaintegrationservice/SCADAIntegrationServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SERVICESCONCEPTS-INVENTORY-LEGACY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SETUP.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/UomServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/controller/ConversionController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/controller/UnitController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/model/Conversion.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/repository/ConversionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/repository/UnitRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/service/ConversionService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/service/UnitService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/static/ui/uom/conversions.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/static/ui/uom/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UomService/src/main/resources/static/ui/uom/units.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/WorkOrderServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/controller/ApprovalController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/controller/AuthProxyController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/controller/WorkOrderController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/model/Approval.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/model/WorkOrder.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/model/WorkOrderTask.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/repository/ApprovalRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/repository/WorkOrderRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/repository/WorkOrderTaskRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/service/ApprovalService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/service/WorkOrderService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/java/com/electdept/workorderservice/util/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/resources/static/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/main/resources/static/login.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WorkOrderService/src/test/java/com/electdept/workorderservice/WorkOrderServiceApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.lingma/rules/Code_presenting.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/java/com/inventory/apigateway/ApiGatewayApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/java/com/electdept/apigateway/ApiGatewayApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/java/com/inventory/apigateway/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/java/com/electdept/apigateway/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/java/com/inventory/apigateway/controller/RouteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/java/com/electdept/apigateway/controller/RouteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/java/com/inventory/apigateway/filter/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/java/com/electdept/apigateway/filter/JwtAuthFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/java/com/inventory/apigateway/util/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/java/com/electdept/apigateway/util/JwtUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/resources/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/resources/static/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/resources/static/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/resources/static/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/main/resources/static/menu.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/main/resources/static/menu.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiGateway/src/test/java/com/inventory/apigateway/ApiGatewayApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/ApiGateway/src/test/java/com/electdept/apigateway/ApiGatewayApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/.gitattributes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/Authservice structure.txt" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/Authservice structure.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/mvnw" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/mvnw" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/mvnw.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/AuthServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/AuthPermissionsServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/controller/HealthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/controller/HealthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/dto/LoginRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/dto/LoginRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/dto/LoginResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/dto/LoginResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/dto/RegisterRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/dto/RegisterRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/filter/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/model/AppUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/model/AppUser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/model/Permission.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/model/Permission.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/model/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/model/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/model/RolePermission.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/model/RolePermission.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/model/UserRole.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/model/UserRole.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/model/WarehouseAccess.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/model/SubstationAccess.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/repository/AppUserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/repository/AppUserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/repository/PermissionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/repository/PermissionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/repository/RolePermissionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/repository/RolePermissionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/repository/RoleRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/repository/RoleRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/repository/UserRoleRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/repository/UserRoleRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/repository/WarehouseAccessRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/repository/SubstationAccessRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/java/com/inventory/authservice/util/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/java/com/electdept/authpermissionsservice/util/JwtUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/css/style.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/ui/auth-service/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/ui/auth-service/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/ui/auth-service/permissions.html" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/ui/auth-service/permissions.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/ui/auth-service/roles.html" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/ui/auth-service/roles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/main/resources/static/ui/auth-service/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/AuthPermissionsService/src/main/resources/static/ui/auth-service/users.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AuthService/src/test/java/com/inventory/authservice/AuthServiceApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/test/java/com/electdept/uomservice/UomServiceApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/AuditService/.gitattributes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/AuditService/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/AuditService/.mvn/.mvn/.mvn/.mvn/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/mvnw" beforeDir="false" afterPath="$PROJECT_DIR$/AuditService/mvnw" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/AuditService/mvnw.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/CatalogServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/AuditService/src/main/java/com/electdept/auditservice/AuditServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/controller/AuthProxyController.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/controller/AuthProxyController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/controller/CategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/controller/AssetClassController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/controller/HealthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/controller/HealthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/controller/ProductAttributeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/controller/AssetSpecController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/controller/ProductController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/controller/AssetModelController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/controller/SkuController.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/controller/AssetController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/dto/CategoryRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/dto/AssetClassRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/dto/ProductRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/dto/AssetModelRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/filter/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/filter/JwtAuthFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/model/Category.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/model/Unit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/model/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/model/AssetModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/model/ProductAttribute.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/model/AssetSpec.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/model/Sku.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/model/Asset.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/repository/CategoryRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/repository/ProductAttributeRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/repository/ProductRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/repository/SkuRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/service/CategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/service/AssetClassService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/service/ProductAttributeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/service/AssetSpecService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/java/com/electdept/assetmanagementservice/service/AssetModelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/service/SkuService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/java/com/inventory/catalogservice/util/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/UomService/src/main/java/com/electdept/uomservice/util/JwtUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/css/style.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/resources/static/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/main/resources/static/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/ui/catalog/attributes.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/ui/catalog/categories.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/ui/catalog/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/ui/catalog/products.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/main/resources/static/ui/catalog/skus.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CatalogService/src/test/java/com/inventory/catalogservice/CatalogServiceApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/AssetManagementService/src/test/java/com/electdept/assetmanagementservice/AssetManagementServiceApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Inventory-Deus-Authentication.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Inventory-Deus-Entities.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Inventory-Deus-Table-Connections.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/InventoryProper.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PROGRESS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/our significant memory.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/project-context.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/read heirarchy.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/login.html" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Deushomo1st&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Deushomo1st/InventoryProper.git&quot;,
+    &quot;accountId&quot;: &quot;81b392fc-4464-4594-a776-531d3c453fba&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="3Et5O7voJzpofWwqA33qT0Fcs22" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.ApiGateway [clean].executor": "Run",
+    "Maven.ApiGateway [compile].executor": "Run",
+    "Maven.AuthPermissionsService [clean].executor": "Run",
+    "Maven.AuthPermissionsService [compile].executor": "Run",
+    "Maven.AuthPermissionsService [validate].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.ApiGatewayApplication.executor": "Run",
+    "Spring Boot.AssetManagementServiceApplication.executor": "Run",
+    "Spring Boot.AuditServiceApplication.executor": "Run",
+    "Spring Boot.AuthPermissionsServiceApplication.executor": "Run",
+    "Spring Boot.BillingTariffServiceApplication.executor": "Run",
+    "Spring Boot.CableSizingServiceApplication.executor": "Run",
+    "Spring Boot.CircuitDesignServiceApplication.executor": "Run",
+    "Spring Boot.DocumentManagementServiceApplication.executor": "Run",
+    "Spring Boot.EnergyMonitoringServiceApplication.executor": "Run",
+    "Spring Boot.GISMappingServiceApplication.executor": "Run",
+    "Spring Boot.LoadCalculationServiceApplication.executor": "Run",
+    "Spring Boot.NotificationServiceApplication.executor": "Run",
+    "Spring Boot.OutageManagementServiceApplication.executor": "Run",
+    "Spring Boot.ProtectionCoordinationServiceApplication.executor": "Run",
+    "Spring Boot.RegulatoryReportingServiceApplication.executor": "Run",
+    "Spring Boot.SCADAIntegrationServiceApplication.executor": "Run",
+    "Spring Boot.UomServiceApplication.executor": "Run",
+    "Spring Boot.WorkOrderServiceApplication.executor": "Run",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "configurable.group.build",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
+    <option name="configurationStatuses">
+      <map>
+        <entry key="SpringBootApplicationConfigurationType">
+          <value>
+            <map>
+              <entry key="ApiGatewayApplication" value="STOPPED" />
+              <entry key="AssetManagementServiceApplication" value="STOPPED" />
+              <entry key="AuditServiceApplication" value="STOPPED" />
+              <entry key="AuthPermissionsServiceApplication" value="STOPPED" />
+              <entry key="BillingTariffServiceApplication" value="STOPPED" />
+              <entry key="CableSizingServiceApplication" value="STOPPED" />
+              <entry key="CircuitDesignServiceApplication" value="STOPPED" />
+              <entry key="DocumentManagementServiceApplication" value="STOPPED" />
+              <entry key="EnergyMonitoringServiceApplication" value="STOPPED" />
+              <entry key="GISMappingServiceApplication" value="STOPPED" />
+              <entry key="LoadCalculationServiceApplication" value="STOPPED" />
+              <entry key="NotificationServiceApplication" value="STOPPED" />
+              <entry key="OutageManagementServiceApplication" value="STOPPED" />
+              <entry key="ProtectionCoordinationServiceApplication" value="STOPPED" />
+              <entry key="RegulatoryReportingServiceApplication" value="STOPPED" />
+              <entry key="SCADAIntegrationServiceApplication" value="STOPPED" />
+              <entry key="UomServiceApplication" value="STOPPED" />
+              <entry key="WorkOrderServiceApplication" value="STOPPED" />
+            </map>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="RunManager" selected="Spring Boot.AuthPermissionsServiceApplication">
+    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="ApiGateway" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.apigateway.ApiGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AssetManagementServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="AssetManagementService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.assetmanagementservice.AssetManagementServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuditServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="AuditService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.auditservice.AuditServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthPermissionsServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="AuthPermissionsService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.authpermissionsservice.AuthPermissionsServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="BillingTariffServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="BillingTariffService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.billingtariffservice.BillingTariffServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CableSizingServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="CableSizingService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.cablesizingservice.CableSizingServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CircuitDesignServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="CircuitDesignService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.circuitdesignservice.CircuitDesignServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DocumentManagementServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="DocumentManagementService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.documentmanagementservice.DocumentManagementServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EnergyMonitoringServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="EnergyMonitoringService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.energymonitoringservice.EnergyMonitoringServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GISMappingServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="GISMappingService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.gismappingservice.GISMappingServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="LoadCalculationServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="LoadCalculationService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.loadcalculationservice.LoadCalculationServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="NotificationServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="NotificationService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.notificationservice.NotificationServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="OutageManagementServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="OutageManagementService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.outagemanagementservice.OutageManagementServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ProtectionCoordinationServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="ProtectionCoordinationService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.protectioncoordinationservice.ProtectionCoordinationServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RegulatoryReportingServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="RegulatoryReportingService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.regulatoryreportingservice.RegulatoryReportingServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SCADAIntegrationServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="SCADAIntegrationService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.scadaintegrationservice.SCADAIntegrationServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UomServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="UomService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.uomservice.UomServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="WorkOrderServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="WorkOrderService" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.electdept.workorderservice.WorkOrderServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Spring Boot.ApiGatewayApplication" />
+      <item itemvalue="Spring Boot.AuthPermissionsServiceApplication" />
+      <item itemvalue="Spring Boot.AssetManagementServiceApplication" />
+      <item itemvalue="Spring Boot.AuditServiceApplication" />
+      <item itemvalue="Spring Boot.BillingTariffServiceApplication" />
+      <item itemvalue="Spring Boot.CableSizingServiceApplication" />
+      <item itemvalue="Spring Boot.CircuitDesignServiceApplication" />
+      <item itemvalue="Spring Boot.DocumentManagementServiceApplication" />
+      <item itemvalue="Spring Boot.EnergyMonitoringServiceApplication" />
+      <item itemvalue="Spring Boot.GISMappingServiceApplication" />
+      <item itemvalue="Spring Boot.LoadCalculationServiceApplication" />
+      <item itemvalue="Spring Boot.NotificationServiceApplication" />
+      <item itemvalue="Spring Boot.OutageManagementServiceApplication" />
+      <item itemvalue="Spring Boot.ProtectionCoordinationServiceApplication" />
+      <item itemvalue="Spring Boot.RegulatoryReportingServiceApplication" />
+      <item itemvalue="Spring Boot.SCADAIntegrationServiceApplication" />
+      <item itemvalue="Spring Boot.UomServiceApplication" />
+      <item itemvalue="Spring Boot.WorkOrderServiceApplication" />
+    </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-cffe25b9f5b3-intellij.indexing.shared.core-IU-253.28294.334" />
+        <option value="bundled-js-predefined-d6986cc7102b-c7e53b3be11b-JavaScript-IU-253.28294.334" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ade08096-1f3d-473a-bd34-f58904129b2b" name="Changes" comment="" />
+      <created>1780984993006</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1780984993006</updated>
+      <workItem from="1780984995073" duration="2826000" />
+      <workItem from="1780991931651" duration="13502000" />
+      <workItem from="1781734686547" duration="2201000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

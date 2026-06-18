@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conversions — UoM Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'UoM Service',
+        page: 'Conversions',
+        tabs: [
+            { href: '/ui/uom/index.html', label: 'Overview' },
+            { href: '/ui/uom/units.html', label: 'Units' },
+            { href: '/ui/uom/conversions.html', label: 'Conversions' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Conversions</h2>
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW CONVERSION</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Factor</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">×</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Conversion</div>
+        <form id="form">
+            <input type="hidden" id="conv-id">
+            <div class="form-group">
+                <label for="conv-from">From Unit</label>
+                <select id="conv-from" required></select>
+            </div>
+            <div class="form-group">
+                <label for="conv-to">To Unit</label>
+                <select id="conv-to" required></select>
+            </div>
+            <div class="form-group">
+                <label for="conv-factor">Factor</label>
+                <input type="number" id="conv-factor" step="0.000001" required>
+                <small>How many "To" units equal one "From" unit? E.g., 24 means 1 From = 24 To.</small>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allConversions = [];
+    let allUnits = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/uom/conversions');
+            if (!res) return;
+            allConversions = await res.json();
+            renderConversions();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadUnits(selectedFromId, selectedToId) {
+        try {
+            const res = await apiFetch('/uom/units');
+            if (!res) return;
+            allUnits = await res.json();
+            const fromSel = document.getElementById('conv-from');
+            const toSel = document.getElementById('conv-to');
+            fromSel.innerHTML = '<option value="">Select</option>';
+            toSel.innerHTML = '<option value="">Select</option>';
+            allUnits.forEach(u => {
+                fromSel.innerHTML += `<option value="${u.id}" ${u.id === selectedFromId ? 'selected' : ''}>${u.code} (${u.name})</option>`;
+                toSel.innerHTML += `<option value="${u.id}" ${u.id === selectedToId ? 'selected' : ''}>${u.code} (${u.name})</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderConversions() {
+        const tbody = document.getElementById('tbody');
+        if (allConversions.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">No conversions yet</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = allConversions.map(c => `
+        <tr>
+          <td>${c.id}</td>
+          <td>${c.fromUnitCode} (${c.fromUnitName})</td>
+          <td>${c.toUnitCode} (${c.toUnitName})</td>
+          <td>${c.factor}</td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editConv(${c.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteConv(${c.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Conversion';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('conv-id').value = '';
+        loadUnits(null, null);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editConv(id) {
+        try {
+            const res = await apiFetch(`/uom/conversions/${id}`);
+            if (!res) return;
+            const c = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Conversion';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('conv-id').value = c.id;
+            document.getElementById('conv-factor').value = c.factor;
+            loadUnits(c.fromUnitId, c.toUnitId);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load conversion' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('conv-id').value;
+        const body = {
+            fromUnitId: parseInt(document.getElementById('conv-from').value),
+            toUnitId: parseInt(document.getElementById('conv-to').value),
+            factor: parseFloat(document.getElementById('conv-factor').value)
+        };
+
+        try {
+            const url = id ? `/uom/conversions/${id}` : '/uom/conversions';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save conversion', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save conversion' });
+        }
+    });
+
+    function deleteConv(id) {
+        confirmDanger({
+            title: 'Delete conversion?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/uom/conversions/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete conversion', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete conversion' });
+                }
+            }
+        });
+    }
+
+    load();
+</script>
+</body>
+</html>

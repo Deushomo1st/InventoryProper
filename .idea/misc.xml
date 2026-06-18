@@ -5,8 +5,23 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/ApiGateway/pom.xml" />
-        <option value="$PROJECT_DIR$/AuthService/pom.xml" />
-        <option value="$PROJECT_DIR$/CatalogService/pom.xml" />
+        <option value="$PROJECT_DIR$/UomService/pom.xml" />
+        <option value="$PROJECT_DIR$/AuditService/pom.xml" />
+        <option value="$PROJECT_DIR$/WorkOrderService/pom.xml" />
+        <option value="$PROJECT_DIR$/GISMappingService/pom.xml" />
+        <option value="$PROJECT_DIR$/CableSizingService/pom.xml" />
+        <option value="$PROJECT_DIR$/NotificationService/pom.xml" />
+        <option value="$PROJECT_DIR$/BillingTariffService/pom.xml" />
+        <option value="$PROJECT_DIR$/CircuitDesignService/pom.xml" />
+        <option value="$PROJECT_DIR$/AssetManagementService/pom.xml" />
+        <option value="$PROJECT_DIR$/AuthPermissionsService/pom.xml" />
+        <option value="$PROJECT_DIR$/LoadCalculationService/pom.xml" />
+        <option value="$PROJECT_DIR$/EnergyMonitoringService/pom.xml" />
+        <option value="$PROJECT_DIR$/OutageManagementService/pom.xml" />
+        <option value="$PROJECT_DIR$/SCADAIntegrationService/pom.xml" />
+        <option value="$PROJECT_DIR$/DocumentManagementService/pom.xml" />
+        <option value="$PROJECT_DIR$/RegulatoryReportingService/pom.xml" />
+        <option value="$PROJECT_DIR$/ProtectionCoordinationService/pom.xml" />
       </list>
     </option>
   </component>

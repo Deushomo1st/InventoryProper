@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Users — Auth & Permissions Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+  renderAppShell({
+    service: 'Auth & Permissions Service',
+    page: 'Users',
+    tabs: [
+      { href: '/ui/auth-service/index.html', label: 'Overview' },
+      { href: '/ui/auth-service/users.html', label: 'Users' },
+      { href: '/ui/auth-service/roles.html', label: 'Roles' },
+      { href: '/ui/auth-service/permissions.html', label: 'Permissions' },
+      { href: '/ui/auth-service/warehouses.html', label: 'Warehouses' }
+    ]
+  });
+</script>
+
+<main class="page">
+  <div class="toolbar">
+    <h2>Users</h2>
+    <input type="text" id="user-search" class="search-input" placeholder="Search by email or ID…" autocomplete="off">
+    <div class="actions">
+      <button class="btn-accent" id="new-user-btn" onclick="showCreateUserModal()" style="display: none;">+ NEW USER</button>
+    </div>
+  </div>
+
+  <table class="data-table" id="users-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Manager</th>
+        <th>Online</th>
+        <th>Last Seen</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="users-body"></tbody>
+  </table>
+</main>
+
+<div class="modal-back" id="roles-modal">
+  <div class="modal" style="max-width: 720px;" onclick="event.stopPropagation()">
+    <button class="modal-x" onclick="closeRolesModal()">×</button>
+    <div class="modal-tag">Assign</div>
+    <div class="modal-title">Roles for <span id="roles-modal-email" style="color: var(--accent);"></span></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 20px 0;">
+      <div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px;">AVAILABLE ROLES</div>
+        <div id="role-checkboxes"></div>
+      </div>
+      <div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px;">EFFECTIVE PERMISSIONS</div>
+        <div id="effective-perms" style="font-family: var(--mono); font-size: 12px; color: var(--text); max-height: 280px; overflow-y: auto;"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" onclick="closeRolesModal()">CANCEL</button>
+      <button type="button" class="btn-accent" onclick="saveUserRoles()">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-back" id="user-modal">
+  <div class="modal" style="max-width: 640px;" onclick="event.stopPropagation()">
+    <button class="modal-x" onclick="closeModal()">×</button>
+    <div class="modal-tag" id="modal-tag">User</div>
+    <div class="modal-title" id="modal-title">Create User</div>
+    <form id="user-form">
+      <input type="hidden" id="user-id">
+      <div class="form-group">
+        <label for="user-email">Email</label>
+        <input type="email" id="user-email" required>
+      </div>
+      <div class="form-group">
+        <label for="user-password">Password</label>
+        <input type="password" id="user-password" autocomplete="new-password">
+        <small>Leave blank to keep current password when editing.</small>
+      </div>
+      <div class="form-row">
+        <input type="checkbox" id="user-active" checked>
+        <label for="user-active">Active</label>
+      </div>
+      <div class="form-row" id="manager-row" style="display: none;">
+        <input type="checkbox" id="user-manager">
+        <label for="user-manager">Manager (can manage roles &amp; permissions)</label>
+      </div>
+      <!-- Onboarding section: only visible on Create. Pre-assign roles + warehouses
+           in one form so admins don't have to chase the new user across three pages. -->
+      <div id="onboard-section" style="display: none; border-top: 1px solid var(--border); margin-top: 16px; padding-top: 16px;">
+        <div class="form-group">
+          <label>Assign Roles <span style="color: var(--muted); font-weight: normal; font-family: var(--mono); font-size: 11px;">(optional)</span></label>
+          <div id="onboard-roles" style="margin-top: 8px;"></div>
+        </div>
+        <div class="form-group">
+          <label>Substation Access <span style="color: var(--muted); font-weight: normal; font-family: var(--mono); font-size: 11px;">(optional)</span></label>
+          <div id="onboard-warehouses" style="margin-top: 8px;"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+        <button type="submit" class="btn-accent">SAVE</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let allUsers = [];
+
+  loadUsers();
+  document.getElementById('user-search').addEventListener('input', renderUsers);
+
+  // Keep the user list fresh without forcing a manual refresh:
+  // - Every 10s, re-fetch the table (catches online/offline transitions of OTHER users
+  //   whose heartbeats only update their own last_seen_at, not your view of them).
+  // - On tab focus, re-fetch immediately (covers the case where you've been on another
+  //   tab and just clicked back to this one).
+  setInterval(loadUsers, 10000);
+  window.addEventListener('focus', loadUsers);
+
+  async function loadUsers() {
+    try {
+      const res = await apiFetch('/auth/users');
+      if (!res) return;
+      allUsers = await res.json();
+      renderUsers();
+    } catch (err) {
+      console.error('Failed to load users:', err);
+      alertModal({ title: 'Failed to load users' });
+    }
+  }
+
+  function renderUsers() {
+    const q = (document.getElementById('user-search').value || '').trim().toLowerCase();
+    const filtered = q
+      ? allUsers.filter(u =>
+          (u.email || '').toLowerCase().includes(q) ||
+          String(u.id).includes(q))
+      : allUsers;
+    const tbody = document.getElementById('users-body');
+    tbody.innerHTML = '';
+    const currentUserId = (getUser() || {}).id;
+    const manager = isManager();
+    // Show the + NEW USER button only to managers.
+    document.getElementById('new-user-btn').style.display = manager ? '' : 'none';
+    if (filtered.length === 0) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td colspan="7" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No users match \"' + q + '\"' : 'No users yet'}</td>`;
+      tbody.appendChild(row);
+      return;
+    }
+    try {
+      filtered.forEach(u => {
+        const isMe = u.id === currentUserId;
+        let deleteBtn;
+        if (!manager) {
+          // Non-managers can't see Delete at all — matches the backend gate.
+          deleteBtn = '';
+        } else if (isMe) {
+          deleteBtn = `<button class="action-link danger" disabled title="You cannot delete your own account">Delete</button>`;
+        } else {
+          deleteBtn = `<button class="action-link danger" onclick="deleteUser(${u.id})">Delete</button>`;
+        }
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${u.id}</td>
+          <td>${u.email}</td>
+          <td><span class="pill ${u.active ? 'active' : 'inactive'}">${u.active ? 'Active' : 'Inactive'}</span></td>
+          <td>${u.manager ? '<span class="pill active">Manager</span>' : '<span style="color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 1px;">—</span>'}</td>
+          <td>
+            <span class="dot ${u.online ? 'up' : 'down'}" style="display: inline-block; vertical-align: middle;"></span>
+            <span style="margin-left: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: ${u.online ? 'var(--accent)' : 'var(--muted)'};">${u.online ? 'online' : 'offline'}</span>
+          </td>
+          <td>${u.online ? 'Just now' : formatLastSeen(u.lastSeenAt)}</td>
+          <td>
+            <div class="row-actions">
+              ${(manager || isMe) ? `<button class="action-link" onclick="editUser(${u.id})">Edit</button>` : ''}
+              ${manager ? `<button class="action-link" onclick="manageUserRoles(${u.id}, '${u.email}')">Roles</button>` : ''}
+              ${deleteBtn}
+            </div>
+            ${(!manager && !isMe) ? '<span style="color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 1px;">View only</span>' : ''}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (err) {
+      console.error('Failed to render users:', err);
+    }
+  }
+
+  async function showCreateUserModal() {
+    document.getElementById('modal-title').textContent = 'Create User';
+    document.getElementById('modal-tag').textContent = 'New';
+    document.getElementById('user-form').reset();
+    document.getElementById('user-id').value = '';
+    document.getElementById('user-active').checked = true;
+    document.getElementById('user-manager').checked = false;
+    document.getElementById('manager-row').style.display = 'none';
+    // Show the one-shot onboarding section: roles + warehouses checkbox lists.
+    document.getElementById('onboard-section').style.display = '';
+    document.getElementById('onboard-roles').innerHTML = '<small style="color: var(--muted); font-family: var(--mono);">Loading roles&hellip;</small>';
+    document.getElementById('onboard-warehouses').innerHTML = '<small style="color: var(--muted); font-family: var(--mono);">Loading warehouses&hellip;</small>';
+    document.getElementById('user-modal').classList.add('show');
+    try {
+      const [rolesRes, whRes] = await Promise.all([
+        apiFetch('/auth/roles'),
+        apiFetch('/gis/substations').catch(() => null)
+      ]);
+      const roles = (rolesRes && rolesRes.ok) ? await rolesRes.json() : [];
+      const rolesHost = document.getElementById('onboard-roles');
+      rolesHost.innerHTML = roles.length === 0
+        ? '<small style="color: var(--muted); font-family: var(--mono);">No roles exist yet. Create one on the Roles tab.</small>'
+        : roles.map(r => `<div class="form-row"><input type="checkbox" id="onboard-role-${r.id}"><label for="onboard-role-${r.id}">${r.name}</label></div>`).join('');
+      const warehouses = (whRes && whRes.ok) ? await whRes.json() : null;
+      const whHost = document.getElementById('onboard-warehouses');
+      if (warehouses === null) {
+        whHost.innerHTML = '<small style="color: var(--warn, #f59e0b); font-family: var(--mono);">WarehouseService offline &mdash; assign warehouses later from the Warehouses tab.</small>';
+      } else if (warehouses.length === 0) {
+        whHost.innerHTML = '<small style="color: var(--muted); font-family: var(--mono);">No warehouses exist yet.</small>';
+      } else {
+        whHost.innerHTML = warehouses.map(w => `<div class="form-row"><input type="checkbox" id="onboard-wh-${w.id}"><label for="onboard-wh-${w.id}"><strong>${w.code || ('WH-' + w.id)}</strong> &mdash; ${w.name || ''}</label></div>`).join('');
+      }
+    } catch (err) {
+      console.error('Failed to load onboarding data:', err);
+    }
+  }
+
+  async function editUser(id) {
+    try {
+      const res = await apiFetch(`/auth/users/${id}`);
+      if (!res) return;
+      const u = await res.json();
+      document.getElementById('modal-title').textContent = 'Edit User';
+      document.getElementById('modal-tag').textContent = 'Edit';
+      document.getElementById('user-id').value = u.id;
+      document.getElementById('user-email').value = u.email;
+      document.getElementById('user-active').checked = u.active;
+      document.getElementById('user-manager').checked = !!u.manager;
+      // Only show the Manager checkbox to current-user managers — others can't
+      // promote anyone (UI gate; backend gate awaits @PreAuthorize work).
+      document.getElementById('manager-row').style.display = isManager() ? '' : 'none';
+      document.getElementById('user-password').value = '';
+      // Edit doesn't show onboarding section — roles/warehouses are managed via
+      // their dedicated buttons (Roles, /ui/auth-service/warehouses.html).
+      document.getElementById('onboard-section').style.display = 'none';
+      document.getElementById('user-modal').classList.add('show');
+    } catch (err) {
+      console.error('Failed to load user:', err);
+      alertModal({ title: 'Failed to load user details' });
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('user-modal').classList.remove('show');
+  }
+
+  document.getElementById('user-modal').addEventListener('click', e => {
+    if (e.target.id === 'user-modal') closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  document.getElementById('user-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('user-id').value;
+    const email = document.getElementById('user-email').value;
+    const password = document.getElementById('user-password').value;
+    const active = document.getElementById('user-active').checked;
+
+    try {
+      let res;
+      if (id) {
+        const updates = { email, active };
+        if (password) updates.password = password;
+        // Only include `manager` if the current user is a manager — otherwise
+        // we silently drop it so non-managers can't promote/demote via the API.
+        if (isManager()) {
+          updates.manager = document.getElementById('user-manager').checked;
+        }
+        res = await apiFetch(`/auth/users/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+      } else {
+        res = await apiFetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+      }
+      if (!res) return;                                 // apiFetch already redirected on 401
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        alertModal({
+          title: id ? 'Failed to update user' : 'Failed to create user',
+          body: errBody.message
+        });
+        return;
+      }
+      // On Create, chain the onboarding assignments — gather ticked roles +
+      // warehouses, fire each as a separate POST. Failures are surfaced but
+      // don't roll back the user (already exists at this point).
+      if (!id) {
+        const created = await res.json().catch(() => null);
+        const newUserId = created && (created.id || (created.user && created.user.id));
+        if (newUserId) {
+          const roleIds = Array.from(document.querySelectorAll('#onboard-roles input[type=checkbox]:checked'))
+            .map(cb => parseInt(cb.id.replace('onboard-role-', ''), 10));
+          const whIds = Array.from(document.querySelectorAll('#onboard-warehouses input[type=checkbox]:checked'))
+            .map(cb => parseInt(cb.id.replace('onboard-wh-', ''), 10));
+          const failures = [];
+          for (const rid of roleIds) {
+            const r = await apiFetch(`/auth/users/${newUserId}/roles/${rid}`, { method: 'POST' });
+            if (!r || !r.ok) failures.push(`role ${rid}`);
+          }
+          for (const wid of whIds) {
+            const r = await apiFetch(`/auth/users/${newUserId}/warehouses/${wid}`, { method: 'POST' });
+            if (!r || !r.ok) failures.push(`warehouse ${wid}`);
+          }
+          if (failures.length > 0) {
+            alertModal({
+              title: 'User created, but some assignments failed',
+              body: 'Failed: ' + failures.join(', ') + '. Use the Roles/Warehouses tabs to retry.'
+            });
+          }
+        }
+      }
+      closeModal();
+      loadUsers();
+    } catch (err) {
+      console.error('Failed to save user:', err);
+      alertModal({ title: 'Failed to save user' });
+    }
+  });
+
+  function deleteUser(id) {
+    confirmDanger({
+      title: 'Delete user?',
+      body: 'This is permanent. Use Edit → uncheck Active to deactivate instead if you may want to restore the user later.',
+      confirmLabel: 'DELETE',
+      onConfirm: async () => {
+        try {
+          const res = await apiFetch(`/auth/users/${id}`, { method: 'DELETE' });
+          if (!res) return;
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alertModal({ title: 'Failed to delete user', body: err.message });
+            return;
+          }
+          loadUsers();
+        } catch (err) {
+          console.error('Failed to delete user:', err);
+          alertModal({ title: 'Failed to delete user' });
+        }
+      }
+    });
+  }
+
+  // ===== Role assignment =====
+
+  let rolesModalUserId = null;
+  let rolesModalInitial = new Set();
+  // roleId -> array of permission objects (cached for live preview)
+  let rolePermsCache = {};
+
+  async function manageUserRoles(userId, email) {
+    rolesModalUserId = userId;
+    document.getElementById('roles-modal-email').textContent = email;
+    document.getElementById('role-checkboxes').innerHTML = '<small style="color: var(--muted); font-family: var(--mono);">Loading&hellip;</small>';
+    document.getElementById('effective-perms').innerHTML = '';
+    document.getElementById('roles-modal').classList.add('show');
+
+    try {
+      const [allRes, userRes] = await Promise.all([
+        apiFetch('/auth/roles'),
+        apiFetch(`/auth/users/${userId}/roles`)
+      ]);
+      if (!allRes || !userRes) return;
+      const allRoles = await allRes.json();
+      const userRoles = await userRes.json();
+      const userRoleIds = new Set(userRoles.map(r => r.id));
+      rolesModalInitial = new Set(userRoleIds);
+
+      // Pre-fetch permissions for every role so we can render the live preview
+      // without firing a request on every checkbox change.
+      rolePermsCache = {};
+      const permResults = await Promise.all(
+        allRoles.map(r =>
+          apiFetch(`/auth/roles/${r.id}/permissions`)
+            .then(res => (res && res.ok) ? res.json() : [])
+            .catch(() => [])
+        )
+      );
+      allRoles.forEach((r, i) => { rolePermsCache[r.id] = permResults[i]; });
+
+      const container = document.getElementById('role-checkboxes');
+      container.innerHTML = '';
+      if (allRoles.length === 0) {
+        container.innerHTML = '<small style="color: var(--muted); font-family: var(--mono);">No roles defined. Create one on the Roles tab first.</small>';
+      } else {
+        allRoles.forEach(r => {
+          const permCount = (rolePermsCache[r.id] || []).length;
+          const row = document.createElement('div');
+          row.className = 'form-row';
+          row.style.alignItems = 'flex-start';
+          row.innerHTML = `
+            <input type="checkbox" id="role-cb-${r.id}" ${userRoleIds.has(r.id) ? 'checked' : ''} onchange="updateEffectivePerms()">
+            <label for="role-cb-${r.id}" style="line-height: 1.3;">
+              ${r.name}
+              <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.5px;">grants ${permCount} permission${permCount === 1 ? '' : 's'}</div>
+            </label>
+          `;
+          container.appendChild(row);
+        });
+      }
+      updateEffectivePerms();
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+      alertModal({ title: 'Failed to load role data' });
+    }
+  }
+
+  // Recompute the union of permissions across all ticked roles, group by
+  // namespace prefix (e.g. "po.*"), and render in the right-hand panel.
+  function updateEffectivePerms() {
+    const checked = document.querySelectorAll('#role-checkboxes input[type=checkbox]:checked');
+    const effective = new Set();
+    checked.forEach(cb => {
+      const rid = parseInt(cb.id.replace('role-cb-', ''), 10);
+      (rolePermsCache[rid] || []).forEach(p => effective.add(p.code));
+    });
+    const host = document.getElementById('effective-perms');
+    if (effective.size === 0) {
+      host.innerHTML = '<span style="color: var(--muted); font-style: italic;">No permissions &mdash; tick a role to see what it grants.</span>';
+      return;
+    }
+    // Group by namespace prefix (everything before the first dot).
+    const grouped = {};
+    [...effective].sort().forEach(code => {
+      const ns = code.includes('.') ? code.split('.')[0] : 'other';
+      (grouped[ns] = grouped[ns] || []).push(code);
+    });
+    host.innerHTML = Object.keys(grouped).sort().map(ns => `
+      <div style="margin-bottom: 12px;">
+        <div style="color: var(--accent); font-size: 11px; letter-spacing: 1px; margin-bottom: 4px;">${ns.toUpperCase()}</div>
+        ${grouped[ns].map(c => `<div style="padding-left: 8px;">${c}</div>`).join('')}
+      </div>
+    `).join('');
+  }
+
+  async function saveUserRoles() {
+    const checkboxes = document.querySelectorAll('#role-checkboxes input[type=checkbox]');
+    const newRoleIds = new Set();
+    checkboxes.forEach(cb => {
+      if (cb.checked) newRoleIds.add(parseInt(cb.id.replace('role-cb-', ''), 10));
+    });
+
+    const toAdd = [...newRoleIds].filter(id => !rolesModalInitial.has(id));
+    const toRemove = [...rolesModalInitial].filter(id => !newRoleIds.has(id));
+
+    try {
+      for (const id of toAdd) {
+        await apiFetch(`/auth/users/${rolesModalUserId}/roles/${id}`, { method: 'POST' });
+      }
+      for (const id of toRemove) {
+        await apiFetch(`/auth/users/${rolesModalUserId}/roles/${id}`, { method: 'DELETE' });
+      }
+      closeRolesModal();
+      loadUsers();
+    } catch (err) {
+      console.error('Failed to save role assignments:', err);
+      alertModal({ title: 'Failed to save role assignments' });
+    }
+  }
+
+  function closeRolesModal() {
+    document.getElementById('roles-modal').classList.remove('show');
+  }
+
+  document.getElementById('roles-modal').addEventListener('click', e => {
+    if (e.target.id === 'roles-modal') closeRolesModal();
+  });
+</script>
+</body>
+</html>

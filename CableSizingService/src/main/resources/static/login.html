@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElectDeptSoftware — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="login-page">
+<div class="login-box">
+  <div class="tag">Electrical Department System</div>
+  <h1>Portal <span>Login</span></h1>
+
+  <label class="field-label" for="email">Email</label>
+  <input id="email" type="email" autocomplete="email" />
+
+  <label class="field-label" for="password">Password</label>
+  <div class="password-wrapper">
+    <input id="password" type="password" autocomplete="current-password" />
+    <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Toggle password visibility">
+      <svg id="eye-icon" viewBox="0 0 24 24">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <svg id="eye-off-icon" viewBox="0 0 24 24" style="display: none;">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+    </button>
+  </div>
+
+  <button id="btn" class="primary-btn" onclick="doLogin()">Sign In</button>
+  <div class="error hidden" id="err"></div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  if (getToken()) window.location.href = '/menu.html';
+
+  function togglePassword() {
+    const pw = document.getElementById('password');
+    const a = document.getElementById('eye-icon');
+    const b = document.getElementById('eye-off-icon');
+    if (pw.type === 'password') {
+      pw.type = 'text';
+      a.style.display = 'none';
+      b.style.display = 'block';
+    } else {
+      pw.type = 'password';
+      a.style.display = 'block';
+      b.style.display = 'none';
+    }
+  }
+
+  async function doLogin() {
+    const btn = document.getElementById('btn');
+    const err = document.getElementById('err');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+    err.classList.add('hidden');
+
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value
+        })
+      });
+      // Parse body defensively — if the server returns an empty body
+      // (e.g. unhandled 500), don't show the cryptic native JSON error.
+      let json = {};
+      try { json = await res.json(); } catch {}
+      if (!res.ok) throw new Error(json.message || `Sign-in failed (HTTP ${res.status})`);
+
+      sessionStorage.setItem('inv_jwt', json.token);
+      sessionStorage.setItem('inv_user', JSON.stringify(json.user));
+
+      window.location.href = '/ui/cablesizing/index.html';
+    } catch (e) {
+      alertModal({ title: 'Sign-in failed', body: e.message });
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>

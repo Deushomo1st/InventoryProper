@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Templates &mdash; Notification Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Notification',
+        page: 'Templates',
+        tabs: [
+            { href: '/ui/notification/index.html', label: 'Overview' },
+            { href: '/ui/notification/inbox.html', label: 'Inbox' },
+            { href: '/ui/notification/templates.html', label: 'Templates' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Templates</h2>
+        <input type="text" id="template-search" class="search-input" placeholder="Search by code, subject…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()" data-permission="notification.send">+ NEW TEMPLATE</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Subject</th>
+            <th>Body Preview</th>
+            <th>Channel</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Template</div>
+        <small style="color: var(--muted); display: block; margin-bottom: 1rem;">Use ${variableName} syntax in templates</small>
+        <form id="form">
+            <input type="hidden" id="tpl-id">
+            <div class="form-group">
+                <label for="tpl-code">Code</label>
+                <input type="text" id="tpl-code" required>
+            </div>
+            <div class="form-group">
+                <label for="tpl-subject">Subject Template</label>
+                <input type="text" id="tpl-subject" required placeholder="e.g., PO ${poCode} approved">
+            </div>
+            <div class="form-group">
+                <label for="tpl-body">Body Template</label>
+                <textarea id="tpl-body" rows="4" required placeholder="e.g., Your purchase order ${poCode} totaling ${total} ${currency} was approved by ${approver}."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="tpl-channel">Channel</label>
+                <select id="tpl-channel">
+                    <option value="IN_APP">IN_APP</option>
+                    <option value="EMAIL">EMAIL</option>
+                    <option value="SMS">SMS</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="tpl-active" checked>
+                <label for="tpl-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allTemplates = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/notification/templates');
+            if (!res) return;
+            allTemplates = await res.json();
+            renderTemplates();
+        } catch (err) {
+            console.error(err);
+            alertModal({title: 'Failed to load templates', body: err.message});
+        }
+    }
+
+    function renderTemplates() {
+        const q = (document.getElementById('template-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allTemplates.filter(t =>
+                (t.code || '').toLowerCase().includes(q) ||
+                (t.subjectTemplate || '').toLowerCase().includes(q))
+            : allTemplates;
+        
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px;">${q ? 'No templates match "' + q + '"' : 'No templates yet'}</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = filtered.map(t => {
+            const bodyPreview = t.bodyTemplate ? (t.bodyTemplate.length > 100 ? t.bodyTemplate.substring(0, 100) + '...' : t.bodyTemplate) : '&mdash;';
+            const isEditable = getUser() && myPerms().includes('notification.send');
+            
+            let actionCell = '';
+            if (isEditable && t.active) {
+                actionCell = `
+                    <button class="action-link" onclick="editTemplate(${t.id})">EDIT</button>
+                    <button class="action-link danger" onclick="deleteTemplate(${t.id})">DELETE</button>
+                `;
+            } else if (isEditable && !t.active) {
+                actionCell = `<button class="action-link" onclick="editTemplate(${t.id})">EDIT</button>`;
+            }
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${t.code}</td>
+                <td>${t.subjectTemplate || '&mdash;'}</td>
+                <td>${bodyPreview}</td>
+                <td>${t.channel || '&mdash;'}</td>
+                <td>${t.active ? '<span class="pill active">Active</span>' : '<span class="pill">Inactive</span>'}</td>
+                <td><div class="row-actions">${actionCell}</div></td>
+            `;
+            tbody.appendChild(tr);
+        }).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Template';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('tpl-id').value = '';
+        document.getElementById('tpl-active').checked = true;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editTemplate(id) {
+        try {
+            const res = await apiFetch(`/notification/templates/${id}`);
+            if (!res) return;
+            const t = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Template';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('tpl-id').value = t.id;
+            document.getElementById('tpl-code').value = t.code;
+            document.getElementById('tpl-subject').value = t.subjectTemplate || '';
+            document.getElementById('tpl-body').value = t.bodyTemplate || '';
+            document.getElementById('tpl-channel').value = t.channel || 'IN_APP';
+            document.getElementById('tpl-active').checked = t.active;
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({title: 'Failed to load template'});
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('tpl-id').value;
+        const body = {
+            code: document.getElementById('tpl-code').value,
+            subjectTemplate: document.getElementById('tpl-subject').value,
+            bodyTemplate: document.getElementById('tpl-body').value,
+            channel: document.getElementById('tpl-channel').value,
+            active: document.getElementById('tpl-active').checked
+        };
+
+        try {
+            const url = id ? `/notification/templates/${id}` : '/notification/templates';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({title: 'Failed to save template', body: err.message || 'Unknown error'});
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({title: 'Failed to save template'});
+        }
+    });
+
+    function deleteTemplate(id) {
+        confirmDanger({
+            title: 'Delete template?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/notification/templates/${id}`, {method: 'DELETE'});
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({title: 'Failed to delete template', body: err.message});
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({title: 'Failed to delete template'});
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('template-search').addEventListener('input', renderTemplates);
+</script>
+</body>
+</html>

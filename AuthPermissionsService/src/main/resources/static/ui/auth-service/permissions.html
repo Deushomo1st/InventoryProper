@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Permissions — Auth & Permissions Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+  renderAppShell({
+    service: 'Auth & Permissions Service',
+    page: 'Permissions',
+    tabs: [
+      { href: '/ui/auth-service/index.html', label: 'Overview' },
+      { href: '/ui/auth-service/users.html', label: 'Users' },
+      { href: '/ui/auth-service/roles.html', label: 'Roles' },
+      { href: '/ui/auth-service/permissions.html', label: 'Permissions' },
+      { href: '/ui/auth-service/warehouses.html', label: 'Warehouses' }
+    ]
+  });
+</script>
+
+<main class="page">
+  <div class="toolbar">
+    <h2>Permissions</h2>
+    <div class="actions">
+      <button class="btn-accent" id="new-perm-btn" onclick="showCreatePermissionModal()" style="display: none;">+ NEW PERMISSION</button>
+    </div>
+  </div>
+
+  <table class="data-table" id="permissions-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Code</th>
+        <th>Status</th>
+        <th>Yours</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="permissions-body"></tbody>
+  </table>
+</main>
+
+<div class="modal-back" id="permission-modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-x" onclick="closeModal()">×</button>
+    <div class="modal-tag" id="modal-tag">Permission</div>
+    <div class="modal-title" id="modal-title">Create Permission</div>
+    <form id="permission-form">
+      <input type="hidden" id="permission-id">
+      <div class="form-group">
+        <label for="permission-code">Code</label>
+        <input type="text" id="permission-code" required autocomplete="off">
+        <small>Convention: dot.namespace, e.g. po.create, stock.read, user.delete.</small>
+      </div>
+      <div class="form-row">
+        <input type="checkbox" id="permission-active" checked>
+        <label for="permission-active">Active</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+        <button type="submit" class="btn-accent">SAVE</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  loadPermissions();
+  setInterval(loadPermissions, 10000);
+  window.addEventListener('focus', loadPermissions);
+
+  // Show the + NEW PERMISSION button only to managers.
+  document.getElementById('new-perm-btn').style.display = isManager() ? '' : 'none';
+
+  async function loadPermissions() {
+    try {
+      const res = await apiFetch('/auth/permissions');
+      if (!res) return;
+      const perms = await res.json();
+      const tbody = document.getElementById('permissions-body');
+      tbody.innerHTML = '';
+      const manager = isManager();
+      const mine = new Set(myPerms());
+      perms.forEach(p => {
+        const yours = mine.has(p.code);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${p.id}</td>
+          <td><span class="pill active">${p.code}</span></td>
+          <td>
+            <span class="dot ${p.active ? 'up' : 'down'}" style="display: inline-block; vertical-align: middle;"></span>
+            <span style="margin-left: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: ${p.active ? 'var(--accent)' : 'var(--muted)'};">${p.active ? 'Active' : 'Inactive'}</span>
+          </td>
+          <td>${yours ? '<span class="dot up" style="display: inline-block; vertical-align: middle;" title="You have this permission"></span>' : '<span style="color: var(--muted); font-family: var(--mono); font-size: 11px;">—</span>'}</td>
+          <td>
+            ${manager ? `
+              <div class="row-actions">
+                <button class="action-link" onclick="editPermission(${p.id})">Edit</button>
+                <button class="action-link danger" onclick="deletePermission(${p.id})">Delete</button>
+              </div>
+            ` : `<span style="color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 1px;">View only</span>`}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (err) {
+      console.error('Failed to load permissions:', err);
+      alertModal({ title: 'Failed to load permissions' });
+    }
+  }
+
+  function showCreatePermissionModal() {
+    document.getElementById('modal-title').textContent = 'Create Permission';
+    document.getElementById('modal-tag').textContent = 'New';
+    document.getElementById('permission-form').reset();
+    document.getElementById('permission-id').value = '';
+    document.getElementById('permission-active').checked = true;
+    document.getElementById('permission-modal').classList.add('show');
+    document.getElementById('permission-code').focus();
+  }
+
+  async function editPermission(id) {
+    try {
+      const res = await apiFetch(`/auth/permissions/${id}`);
+      if (!res) return;
+      const p = await res.json();
+      document.getElementById('modal-title').textContent = 'Edit Permission';
+      document.getElementById('modal-tag').textContent = 'Edit';
+      document.getElementById('permission-id').value = p.id;
+      document.getElementById('permission-code').value = p.code;
+      document.getElementById('permission-active').checked = !!p.active;
+      document.getElementById('permission-modal').classList.add('show');
+      document.getElementById('permission-code').focus();
+    } catch (err) {
+      console.error('Failed to load permission:', err);
+      alertModal({ title: 'Failed to load permission details' });
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('permission-modal').classList.remove('show');
+  }
+
+  document.getElementById('permission-modal').addEventListener('click', e => {
+    if (e.target.id === 'permission-modal') closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  document.getElementById('permission-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('permission-id').value;
+    const code = document.getElementById('permission-code').value.trim();
+    const active = document.getElementById('permission-active').checked;
+    if (!code) return;
+
+    try {
+      const opts = {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, active })
+      };
+      const url = id ? `/auth/permissions/${id}` : '/auth/permissions';
+      const res = await apiFetch(url, opts);
+      if (!res) return;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alertModal({ title: 'Failed to save permission', body: err.message });
+        return;
+      }
+      closeModal();
+      loadPermissions();
+    } catch (err) {
+      console.error('Failed to save permission:', err);
+      alertModal({ title: 'Failed to save permission' });
+    }
+  });
+
+  function deletePermission(id) {
+    confirmDanger({
+      title: 'Delete permission?',
+      body: 'It will be removed from every role that currently has it. Users with those roles will lose the permission on their next login.',
+      confirmLabel: 'DELETE',
+      onConfirm: async () => {
+        try {
+          const res = await apiFetch(`/auth/permissions/${id}`, { method: 'DELETE' });
+          if (!res) return;
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alertModal({ title: 'Failed to delete permission', body: err.message });
+            return;
+          }
+          loadPermissions();
+        } catch (err) {
+          console.error('Failed to delete permission:', err);
+          alertModal({ title: 'Failed to delete permission' });
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>

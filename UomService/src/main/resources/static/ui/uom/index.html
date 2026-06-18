@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UoM Service — Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'UoM Service',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/uom/index.html', label: 'Overview' },
+            { href: '/ui/uom/units.html', label: 'Units' },
+            { href: '/ui/uom/conversions.html', label: 'Conversions' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <h1>UoM Service</h1>
+    <p class="sub">Units of measure and conversion factors. The HOW of quantity.</p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+        <a class="tile" href="/ui/uom/units.html">
+            <div class="tile-name">Units</div>
+            <div class="tile-desc">Define units like EA, KG, L, CS, PLT. The building blocks of measurement.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+        <a class="tile" href="/ui/uom/conversions.html">
+            <div class="tile-name">Conversions</div>
+            <div class="tile-desc">Conversion factors between units. 1 CS = 24 EA, 1 PLT = 40 CS.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

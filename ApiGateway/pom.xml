@@ -8,7 +8,7 @@
         <version>3.5.14</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.inventory</groupId>
+    <groupId>com.electdept</groupId>
     <artifactId>ApiGateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ApiGateway</name>

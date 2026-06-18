@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Auth & Permissions Service — Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+  renderAppShell({
+    service: 'Auth & Permissions Service',
+    page: 'Overview',
+    tabs: [
+      { href: '/ui/auth-service/index.html', label: 'Overview' },
+      { href: '/ui/auth-service/users.html', label: 'Users' },
+      { href: '/ui/auth-service/roles.html', label: 'Roles' },
+      { href: '/ui/auth-service/permissions.html', label: 'Permissions' }
+    ]
+  });
+</script>
+
+<main class="page">
+  <h1>Auth & Permissions Service</h1>
+  <p class="sub">Users, roles, permissions, warehouse access. JWT issuance &amp; verification.</p>
+
+  <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    <a class="tile" href="/ui/auth-service/users.html">
+      <div class="tile-name">Users</div>
+      <div class="tile-desc">Manage user accounts. Create, edit, deactivate. View online status &amp; last-seen.</div>
+      <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+    </a>
+    <a class="tile" href="/ui/auth-service/roles.html">
+      <div class="tile-name">Roles</div>
+      <div class="tile-desc">Define roles. Assign them to users from the Users page.</div>
+      <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+    </a>
+    <a class="tile" href="/ui/auth-service/permissions.html">
+      <div class="tile-name">Permissions</div>
+      <div class="tile-desc">Manage permission keys. Bind them to roles.</div>
+      <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+    </a>
+    <a class="tile" href="/ui/auth-service/warehouses.html">
+      <div class="tile-name">Substation Access</div>
+      <div class="tile-desc">Scope users to specific warehouses.</div>
+      <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+    </a>
+  </div>
+</main>
+</body>
+</html>

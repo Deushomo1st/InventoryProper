@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notification &mdash; Notification Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Notification',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/notification/index.html', label: 'Overview' },
+            { href: '/ui/notification/inbox.html', label: 'Inbox' },
+            { href: '/ui/notification/templates.html', label: 'Templates' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="tile-grid" style="margin-top: 2rem;">
+        <a href="/ui/notification/inbox.html" class="tile">
+            <h3>Inbox</h3>
+            <p>Your notifications</p>
+            <div class="tile-status">
+                <span class="dot up"></span>
+                <span>online</span>
+            </div>
+        </a>
+        <a href="/ui/notification/templates.html" class="tile">
+            <h3>Templates</h3>
+            <p>Notification templates</p>
+            <div class="tile-status">
+                <span class="dot up"></span>
+                <span>online</span>
+            </div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

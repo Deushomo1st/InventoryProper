@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Units — UoM Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'UoM Service',
+        page: 'Units',
+        tabs: [
+            { href: '/ui/uom/index.html', label: 'Overview' },
+            { href: '/ui/uom/units.html', label: 'Units' },
+            { href: '/ui/uom/conversions.html', label: 'Conversions' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Units</h2>
+        <input type="text" id="unit-search" class="search-input" placeholder="Search by code or name…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW UNIT</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">×</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Unit</div>
+        <form id="form">
+            <input type="hidden" id="unit-id">
+            <div class="form-group">
+                <label for="unit-code">Code</label>
+                <input type="text" id="unit-code" required>
+                <small>Short code like EA, KG, L, CS, PLT.</small>
+            </div>
+            <div class="form-group">
+                <label for="unit-name">Name</label>
+                <input type="text" id="unit-name" required>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="unit-active" checked>
+                <label for="unit-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allUnits = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/uom/units');
+            if (!res) return;
+            allUnits = await res.json();
+            renderUnits();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderUnits() {
+        const q = (document.getElementById('unit-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allUnits.filter(u =>
+                (u.code || '').toLowerCase().includes(q) ||
+                (u.name || '').toLowerCase().includes(q))
+            : allUnits;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No units match "' + q + '"' : 'No units yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(u => `
+        <tr>
+          <td>${u.code}</td>
+          <td>${u.name}</td>
+          <td><span class="pill ${u.active ? 'active' : 'inactive'}">${u.active ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editUnit(${u.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteUnit(${u.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Unit';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('unit-id').value = '';
+        document.getElementById('unit-active').checked = true;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editUnit(id) {
+        try {
+            const res = await apiFetch(`/uom/units/${id}`);
+            if (!res) return;
+            const u = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Unit';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('unit-id').value = u.id;
+            document.getElementById('unit-code').value = u.code;
+            document.getElementById('unit-name').value = u.name;
+            document.getElementById('unit-active').checked = u.active;
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load unit' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('unit-id').value;
+        const body = {
+            code: document.getElementById('unit-code').value,
+            name: document.getElementById('unit-name').value,
+            active: document.getElementById('unit-active').checked
+        };
+
+        try {
+            const url = id ? `/uom/units/${id}` : '/uom/units';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save unit', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save unit' });
+        }
+    });
+
+    function deleteUnit(id) {
+        confirmDanger({
+            title: 'Delete unit?',
+            body: 'This is permanent. Any conversions referencing this unit will also be deleted.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/uom/units/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete unit', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete unit' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('unit-search').addEventListener('input', renderUnits);
+</script>
+</body>
+</html>

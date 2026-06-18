@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Roles — Auth & Permissions Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+  renderAppShell({
+    service: 'Auth & Permissions Service',
+    page: 'Roles',
+    tabs: [
+      { href: '/ui/auth-service/index.html', label: 'Overview' },
+      { href: '/ui/auth-service/users.html', label: 'Users' },
+      { href: '/ui/auth-service/roles.html', label: 'Roles' },
+      { href: '/ui/auth-service/permissions.html', label: 'Permissions' },
+      { href: '/ui/auth-service/warehouses.html', label: 'Warehouses' }
+    ]
+  });
+</script>
+
+<main class="page">
+  <div class="toolbar">
+    <h2>Roles</h2>
+    <div class="actions">
+      <button class="btn-accent" id="new-role-btn" onclick="showCreateRoleModal()" style="display: none;">+ NEW ROLE</button>
+    </div>
+  </div>
+
+  <table class="data-table" id="roles-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Yours</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="roles-body"></tbody>
+  </table>
+</main>
+
+<div class="modal-back" id="perms-modal">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width: 560px;">
+    <button class="modal-x" onclick="closePermsModal()">×</button>
+    <div class="modal-tag">Assign</div>
+    <div class="modal-title">Permissions for <span id="perms-modal-role" style="color: var(--accent);"></span></div>
+    <div class="modal-hint">
+      Permissions live in JWT claims and are computed once at login. Users with this role must log out and back in to see changes take effect.
+    </div>
+    <div id="perm-groups" style="margin-bottom: 20px; max-height: 50vh; overflow-y: auto;"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" onclick="closePermsModal()">CANCEL</button>
+      <button type="button" class="btn-accent" onclick="saveRolePermissions()">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-back" id="role-modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-x" onclick="closeModal()">×</button>
+    <div class="modal-tag" id="modal-tag">Role</div>
+    <div class="modal-title" id="modal-title">Create Role</div>
+    <form id="role-form">
+      <input type="hidden" id="role-id">
+      <div class="form-group">
+        <label for="role-name">Name</label>
+        <input type="text" id="role-name" required autocomplete="off">
+        <small>Convention: UPPER_SNAKE, e.g. ADMIN, BUYER, RECEIVER.</small>
+      </div>
+      <div class="form-row">
+        <input type="checkbox" id="role-active" checked>
+        <label for="role-active">Active</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+        <button type="submit" class="btn-accent">SAVE</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  loadRoles();
+  setInterval(loadRoles, 10000);
+  window.addEventListener('focus', loadRoles);
+
+  // Show the + NEW ROLE button only to managers.
+  document.getElementById('new-role-btn').style.display = isManager() ? '' : 'none';
+
+  async function loadRoles() {
+    try {
+      const res = await apiFetch('/auth/roles');
+      if (!res) return;
+      const roles = await res.json();
+      const tbody = document.getElementById('roles-body');
+      tbody.innerHTML = '';
+      const manager = isManager();
+      const mine = new Set(myRoles());
+      roles.forEach(r => {
+        const yours = mine.has(r.name);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${r.id}</td>
+          <td><span class="pill active">${r.name}</span></td>
+          <td>
+            <span class="dot ${r.active ? 'up' : 'down'}" style="display: inline-block; vertical-align: middle;"></span>
+            <span style="margin-left: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: ${r.active ? 'var(--accent)' : 'var(--muted)'};">${r.active ? 'Active' : 'Inactive'}</span>
+          </td>
+          <td>${yours ? '<span class="dot up" style="display: inline-block; vertical-align: middle;" title="You have this role"></span>' : '<span style="color: var(--muted); font-family: var(--mono); font-size: 11px;">—</span>'}</td>
+          <td>
+            ${manager ? `
+              <div class="row-actions">
+                <button class="action-link" onclick="editRole(${r.id})">Edit</button>
+                <button class="action-link" onclick="manageRolePermissions(${r.id}, '${r.name}')">Permissions</button>
+                <button class="action-link danger" onclick="deleteRole(${r.id})">Delete</button>
+              </div>
+            ` : `<span style="color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 1px;">View only</span>`}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+      alertModal({ title: 'Failed to load roles' });
+    }
+  }
+
+  function showCreateRoleModal() {
+    document.getElementById('modal-title').textContent = 'Create Role';
+    document.getElementById('modal-tag').textContent = 'New';
+    document.getElementById('role-form').reset();
+    document.getElementById('role-id').value = '';
+    document.getElementById('role-active').checked = true;
+    document.getElementById('role-modal').classList.add('show');
+    document.getElementById('role-name').focus();
+  }
+
+  async function editRole(id) {
+    try {
+      const res = await apiFetch(`/auth/roles/${id}`);
+      if (!res) return;
+      const r = await res.json();
+      document.getElementById('modal-title').textContent = 'Edit Role';
+      document.getElementById('modal-tag').textContent = 'Edit';
+      document.getElementById('role-id').value = r.id;
+      document.getElementById('role-name').value = r.name;
+      document.getElementById('role-active').checked = !!r.active;
+      document.getElementById('role-modal').classList.add('show');
+      document.getElementById('role-name').focus();
+    } catch (err) {
+      console.error('Failed to load role:', err);
+      alertModal({ title: 'Failed to load role details' });
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('role-modal').classList.remove('show');
+  }
+
+  document.getElementById('role-modal').addEventListener('click', e => {
+    if (e.target.id === 'role-modal') closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeModal();
+      closePermsModal();
+    }
+  });
+
+  document.getElementById('role-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('role-id').value;
+    const name = document.getElementById('role-name').value.trim();
+    const active = document.getElementById('role-active').checked;
+    if (!name) return;
+
+    try {
+      const opts = {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, active })
+      };
+      const url = id ? `/auth/roles/${id}` : '/auth/roles';
+      const res = await apiFetch(url, opts);
+      if (!res) return;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alertModal({ title: 'Failed to save role', body: err.message });
+        return;
+      }
+      closeModal();
+      loadRoles();
+    } catch (err) {
+      console.error('Failed to save role:', err);
+      alertModal({ title: 'Failed to save role' });
+    }
+  });
+
+  function deleteRole(id) {
+    confirmDanger({
+      title: 'Delete role?',
+      body: 'The role will be unassigned from every user and stripped of every permission it had. This is permanent.',
+      confirmLabel: 'DELETE',
+      onConfirm: async () => {
+        try {
+          const res = await apiFetch(`/auth/roles/${id}`, { method: 'DELETE' });
+          if (!res) return;
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alertModal({ title: 'Failed to delete role', body: err.message });
+            return;
+          }
+          loadRoles();
+        } catch (err) {
+          console.error('Failed to delete role:', err);
+          alertModal({ title: 'Failed to delete role' });
+        }
+      }
+    });
+  }
+
+  // ===== Role-permission assignment =====
+  // Permissions are grouped by namespace (the prefix before the first dot in the code).
+  // Convention from ElectDeptSoftware-Authentication.pdf Part 2.3 — e.g. po.create, stock.read.
+
+  let permsModalRoleId = null;
+  let permsModalInitial = new Set();
+
+  async function manageRolePermissions(roleId, roleName) {
+    permsModalRoleId = roleId;
+    document.getElementById('perms-modal-role').textContent = roleName;
+
+    try {
+      const [allRes, currentRes] = await Promise.all([
+        apiFetch('/auth/permissions'),
+        apiFetch(`/auth/roles/${roleId}/permissions`)
+      ]);
+      if (!allRes || !currentRes) return;
+      const allPerms = await allRes.json();
+      const currentPerms = await currentRes.json();
+      const currentIds = new Set(currentPerms.map(p => p.id));
+      permsModalInitial = new Set(currentIds);
+
+      const container = document.getElementById('perm-groups');
+      container.innerHTML = '';
+
+      if (allPerms.length === 0) {
+        container.innerHTML = '<small style="color: var(--muted); font-family: var(--mono);">No permissions defined. Create them on the Permissions tab first.</small>';
+      } else {
+        // Group by namespace — substring before first dot. e.g. po.create → "po"
+        const groups = {};
+        allPerms.forEach(p => {
+          const dotIdx = p.code.indexOf('.');
+          const ns = dotIdx === -1 ? '(uncategorized)' : p.code.substring(0, dotIdx);
+          if (!groups[ns]) groups[ns] = [];
+          groups[ns].push(p);
+        });
+
+        Object.keys(groups).sort().forEach(ns => {
+          groups[ns].sort((a, b) => a.code.localeCompare(b.code));
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'perm-group';
+
+          const header = document.createElement('div');
+          header.className = 'perm-group-header';
+          header.textContent = ns;
+          groupDiv.appendChild(header);
+
+          groups[ns].forEach(p => {
+            const dotIdx = p.code.indexOf('.');
+            const label = dotIdx === -1 ? p.code : p.code.substring(dotIdx + 1);
+            const row = document.createElement('div');
+            row.className = 'form-row';
+            row.innerHTML = `
+              <input type="checkbox" id="perm-cb-${p.id}" ${currentIds.has(p.id) ? 'checked' : ''}>
+              <label for="perm-cb-${p.id}">${label}</label>
+            `;
+            groupDiv.appendChild(row);
+          });
+
+          container.appendChild(groupDiv);
+        });
+      }
+
+      document.getElementById('perms-modal').classList.add('show');
+    } catch (err) {
+      console.error('Failed to load permissions:', err);
+      alertModal({ title: 'Failed to load permission data' });
+    }
+  }
+
+  async function saveRolePermissions() {
+    const checkboxes = document.querySelectorAll('#perm-groups input[type=checkbox]');
+    const newIds = new Set();
+    checkboxes.forEach(cb => {
+      if (cb.checked) newIds.add(parseInt(cb.id.replace('perm-cb-', ''), 10));
+    });
+
+    const toAdd = [...newIds].filter(id => !permsModalInitial.has(id));
+    const toRemove = [...permsModalInitial].filter(id => !newIds.has(id));
+
+    try {
+      for (const id of toAdd) {
+        await apiFetch(`/auth/roles/${permsModalRoleId}/permissions/${id}`, { method: 'POST' });
+      }
+      for (const id of toRemove) {
+        await apiFetch(`/auth/roles/${permsModalRoleId}/permissions/${id}`, { method: 'DELETE' });
+      }
+      closePermsModal();
+    } catch (err) {
+      console.error('Failed to save permissions:', err);
+      alertModal({ title: 'Failed to save permission assignments' });
+    }
+  }
+
+  function closePermsModal() {
+    document.getElementById('perms-modal').classList.remove('show');
+  }
+
+  document.getElementById('perms-modal').addEventListener('click', e => {
+    if (e.target.id === 'perms-modal') closePermsModal();
+  });
+</script>
+</body>
+</html>

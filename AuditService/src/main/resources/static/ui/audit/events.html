@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Service - Events</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Audit Service', 
+                page: 'Events', 
+                tabs: [
+                    {href:'/ui/audit/index.html', label:'Overview'},
+                    {href:'/ui/audit/events.html', label:'Events'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <div class="actions">
+                <input type="number" id="filter-user" placeholder="User ID" style="width: 120px;" oninput="applyFilters()">
+                <input type="text" id="filter-event" placeholder="Event Type" style="width: 150px;" oninput="applyFilters()">
+                <input type="text" id="filter-source" placeholder="Source Service" style="width: 180px;" oninput="applyFilters()">
+                <button class="btn-accent" onclick="syncLedger()" id="sync-btn" style="display:none;">+ SYNC LEDGER</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>User</th>
+                    <th>Event Type</th>
+                    <th>Source Service</th>
+                    <th>Source ID</th>
+                    <th>Resource</th>
+                    <th>Metadata</th>
+                </tr>
+            </thead>
+            <tbody id="events-tbody">
+                <tr><td colspan="7">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let allEvents = [];
+
+        async function loadEvents() {
+            try {
+                const params = new URLSearchParams();
+                const userId = document.getElementById('filter-user').value;
+                const eventType = document.getElementById('filter-event').value;
+                const sourceService = document.getElementById('filter-source').value;
+                
+                if (userId) params.set('userId', userId);
+                if (eventType) params.set('eventType', eventType);
+                if (sourceService) params.set('sourceService', sourceService);
+                
+                const url = '/audit/events' + (params.toString() ? '?' + params.toString() : '');
+                const res = await apiFetch(url);
+                if (!res || !res.ok) throw new Error('Failed to load events');
+                allEvents = await res.json();
+                renderEvents(allEvents);
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        function renderEvents(events) {
+            const tbody = document.getElementById('events-tbody');
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7">No audit events found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = events.map(e => `
+                <tr>
+                    <td>${new Date(e.createdAt).toLocaleString()}</td>
+                    <td>User ${e.userId}</td>
+                    <td><span class="pill yellow">${e.eventType}</span></td>
+                    <td>${e.sourceService}</td>
+                    <td>${e.sourceId || '—'}</td>
+                    <td>${e.resourceType ? `${e.resourceType}/${e.resourceId}` : '—'}</td>
+                    <td><code>${e.metadata ? truncate(e.metadata, 60) : '—'}</code></td>
+                </tr>
+            `).join('');
+        }
+
+        function applyFilters() {
+            loadEvents();
+        }
+
+        function truncate(str, len) {
+            if (!str) return '';
+            return str.length > len ? str.substring(0, len) + '...' : str;
+        }
+
+        async function syncLedger() {
+            confirmDanger({
+                title: 'Sync Stock Ledger',
+                body: 'This will import rows from inventory.stock_ledger into this table. Duplicate rows are safely ignored. Continue?',
+                confirmLabel: 'Sync',
+                onConfirm: async () => {
+                    try {
+                        const res = await apiFetch('/audit/events/sync/ledger', { method: 'POST' });
+                        if (!res || !res.ok) throw new Error(await res.text());
+                        const result = await res.json();
+                        alertModal({ 
+                            title: 'Sync Complete', 
+                            body: `Ingested: ${result.ingested}, Skipped: ${result.skipped}, Total in Source: ${result.totalRowsInSource}` 
+                        });
+                        loadEvents();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        // Show sync button only for users with audit.write permission
+        if (myPerms().includes('audit.write')) {
+            document.getElementById('sync-btn').style.display = 'inline-block';
+        }
+
+        // Auto-refresh
+        setInterval(loadEvents, 30000); // Less frequent refresh (30s) since this is read-only
+        window.addEventListener('focus', loadEvents);
+
+        // Initial load
+        loadEvents();
+    </script>
+</body>
+</html>
