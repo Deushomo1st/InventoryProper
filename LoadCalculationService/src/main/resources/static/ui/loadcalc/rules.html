@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replenishment - Rules</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Replenishment', 
+                page: 'Rules', 
+                tabs: [
+                    {href:'/ui/loadcalc/index.html', label:'Overview'},
+                    {href:'/ui/loadcalc/requests.html', label:'Rules'},
+                    {href:'/ui/loadcalc/results.html', label:'Suggestions'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <div class="actions">
+                <button id="btn-new-rule" class="btn-accent">+ NEW RULE</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>SKU ID</th>
+                    <th>Substation ID</th>
+                    <th>Reorder Point</th>
+                    <th>Reorder Qty</th>
+                    <th>Preferred Document</th>
+                    <th>Unit Price</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="rules-body">
+                <tr><td colspan="8" style="text-align:center">Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Create/Edit Modal -->
+        <div id="rule-modal-back" class="modal-back">
+            <div id="rule-modal" class="modal">
+                <span class="modal-x" onclick="closeRuleModal()">×</span>
+                <div class="modal-tag">RULES</div>
+                <div class="modal-title" id="rule-modal-title">Create Rule</div>
+                
+                <form id="rule-form">
+                    <div class="form-group">
+                        <label>SKU ID</label>
+                        <select id="rule-sku-id" required>
+                            <option value="">Loading SKUs...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Substation ID</label>
+                        <select id="rule-warehouse-id" required>
+                            <option value="">Loading warehouses...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Reorder Point</label>
+                            <input type="number" step="any" id="rule-reorder-point" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Reorder Qty</label>
+                            <input type="number" step="any" id="rule-reorder-qty" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Preferred Document ID</label>
+                        <select id="rule-supplier-id">
+                            <option value="">Loading suppliers...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Default Unit Price</label>
+                        <input type="number" step="any" id="rule-unit-price" value="1.00" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rule-active" checked> Active
+                        </label>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-accent" id="rule-submit-btn">Create</button>
+                        <button type="button" class="btn-ghost" onclick="closeRuleModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allSkus = [];
+        let allWarehouses = [];
+        let allSuppliers = [];
+
+        async function loadRules() {
+            const res = await apiFetch('/loadcalc/requests');
+            if (!res || !res.ok) { alert('Failed to load rules'); return; }
+            allRules = await res.json();
+            renderRules(allRules);
+        }
+
+        async function loadSkus() {
+            const res = await apiFetch('/asset/units');
+            if (res && res.ok) {
+                allSkus = await res.json();
+                populateSkuDropdown(allSkus);
+            }
+        }
+
+        async function loadWarehouses() {
+            const res = await apiFetch('/gis/substations');
+            if (res && res.ok) {
+                allWarehouses = await res.json();
+                populateWarehouseDropdown(allWarehouses);
+            }
+        }
+
+        async function loadSuppliers() {
+            const res = await apiFetch('/document/documents');
+            if (res && res.ok) {
+                allSuppliers = await res.json();
+                populateSupplierDropdown(allSuppliers);
+            }
+        }
+
+        function populateSkuDropdown(skus) {
+            const sel = document.getElementById('rule-sku-id');
+            sel.innerHTML = '<option value="">Select SKU</option>' + skus.map(s => `<option value="${s.id}">${s.id}</option>`).join('');
+        }
+
+        function populateWarehouseDropdown(whs) {
+            const sel = document.getElementById('rule-warehouse-id');
+            sel.innerHTML = '<option value="">Select Substation</option>' + whs.map(w => `<option value="${w.id}">${w.id}</option>`).join('');
+        }
+
+        function populateSupplierDropdown(sups) {
+            const sel = document.getElementById('rule-supplier-id');
+            sel.innerHTML = '<option value="">Select Document</option>' + sups.map(s => `<option value="${s.id}">${s.id}</option>`).join('');
+        }
+
+        let currentEditId = null;
+
+        function showRuleModal(id = null) {
+            currentEditId = id;
+            const form = document.getElementById('rule-form');
+            form.reset();
+            
+            if (id) {
+                const rule = allRules.find(r => r.id === id);
+                document.getElementById('rule-modal-title').textContent = 'Edit Rule';
+                document.getElementById('rule-submit-btn').textContent = 'Update';
+                document.getElementById('rule-sku-id').value = rule.skuId;
+                document.getElementById('rule-warehouse-id').value = rule.warehouseId;
+                document.getElementById('rule-reorder-point').value = rule.reorderPoint;
+                document.getElementById('rule-reorder-qty').value = rule.reorderQty;
+                document.getElementById('rule-supplier-id').value = rule.preferredSupplierId || '';
+                document.getElementById('rule-unit-price').value = rule.defaultUnitPrice;
+                document.getElementById('rule-active').checked = rule.active;
+            } else {
+                document.getElementById('rule-modal-title').textContent = 'Create Rule';
+                document.getElementById('rule-submit-btn').textContent = 'Create';
+            }
+            
+            document.getElementById('rule-modal-back').classList.add('show');
+        }
+
+        function closeRuleModal() {
+            document.getElementById('rule-modal-back').classList.remove('show');
+            currentEditId = null;
+        }
+
+        document.getElementById('rule-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const body = {
+                skuId: parseInt(document.getElementById('rule-sku-id').value),
+                warehouseId: parseInt(document.getElementById('rule-warehouse-id').value),
+                reorderPoint: parseFloat(document.getElementById('rule-reorder-point').value),
+                reorderQty: parseFloat(document.getElementById('rule-reorder-qty').value),
+                defaultUnitPrice: parseFloat(document.getElementById('rule-unit-price').value),
+                active: document.getElementById('rule-active').checked
+            };
+            
+            const supplierId = document.getElementById('rule-supplier-id').value;
+            if (supplierId) body.preferredSupplierId = parseInt(supplierId);
+            
+            try {
+                let res;
+                if (currentEditId) {
+                    res = await apiFetch(`/loadcalc/requests/${currentEditId}`, { method: 'PUT', body: JSON.stringify(body) });
+                } else {
+                    res = await apiFetch('/loadcalc/requests', { method: 'POST', body: JSON.stringify(body) });
+                }
+                
+                if (res && res.ok) {
+                    closeRuleModal();
+                    await loadRules();
+                } else {
+                    const err = await res.json();
+                    alertModal({ title: 'Failed', body: err.message });
+                }
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        });
+
+        let allRules = [];
+
+        function renderRules(rules) {
+            const tbody = document.getElementById('rules-body');
+            if (rules.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">No rules found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = rules.map(r => `
+                <tr>
+                    <td>${r.skuId}</td>
+                    <td>${r.warehouseId}</td>
+                    <td>${r.reorderPoint}</td>
+                    <td>${r.reorderQty}</td>
+                    <td>${r.preferredSupplierId || '-'}</td>
+                    <td>${r.defaultUnitPrice}</td>
+                    <td><span class="pill ${r.active ? 'pill-success' : 'pill-muted'}">${r.active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <a class="action-link" onclick="showRuleModal(${r.id})">Edit</a>
+                        &nbsp;&nbsp;
+                        <a class="action-link danger" onclick="confirmDanger({title:'Delete Rule',body:'Are you sure?',confirmLabel:'Delete',onConfirm:()=>deleteRule(${r.id})})">Delete</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteRule(id) {
+            try {
+                const res = await apiFetch(`/loadcalc/requests/${id}`, { method: 'DELETE' });
+                if (res && res.ok) {
+                    await loadRules();
+                } else {
+                    alertModal({ title: 'Failed', body: 'Could not delete rule' });
+                }
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        document.getElementById('btn-new-rule').addEventListener('click', () => showRuleModal());
+
+        // Load on page load using multi-service pattern
+        async function init() {
+            try {
+                await Promise.all([loadRules(), loadSkus(), loadWarehouses(), loadSuppliers()]);
+            } catch (err) {
+                alertModal({ title: 'Service unavailable', body: `Start ${err.message} and try again.` });
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

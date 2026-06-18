@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="WorkOrderService" />
+        <module name="LoadCalculationService" />
+        <module name="UomService" />
+        <module name="NotificationService" />
+        <module name="OutageManagementService" />
+        <module name="ProtectionCoordinationService" />
+        <module name="DocumentManagementService" />
+        <module name="ApiGateway" />
+        <module name="GISMappingService" />
+        <module name="AuthPermissionsService" />
+        <module name="AssetManagementService" />
+        <module name="BillingTariffService" />
+        <module name="EnergyMonitoringService" />
+        <module name="SCADAIntegrationService" />
+        <module name="RegulatoryReportingService" />
+        <module name="AuditService" />
+        <module name="CircuitDesignService" />
+        <module name="CableSizingService" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="ApiGateway" options="-parameters" />
+      <module name="AssetManagementService" options="-parameters" />
+      <module name="AuditService" options="-parameters" />
+      <module name="AuthPermissionsService" options="-parameters" />
+      <module name="BillingTariffService" options="-parameters" />
+      <module name="CableSizingService" options="-parameters" />
+      <module name="CircuitDesignService" options="-parameters" />
+      <module name="DocumentManagementService" options="-parameters" />
+      <module name="EnergyMonitoringService" options="-parameters" />
+      <module name="GISMappingService" options="-parameters" />
+      <module name="LoadCalculationService" options="-parameters" />
+      <module name="NotificationService" options="-parameters" />
+      <module name="OutageManagementService" options="-parameters" />
+      <module name="ProtectionCoordinationService" options="-parameters" />
+      <module name="RegulatoryReportingService" options="-parameters" />
+      <module name="SCADAIntegrationService" options="-parameters" />
+      <module name="UomService" options="-parameters" />
+      <module name="WorkOrderService" options="-parameters" />
+    </option>
+  </component>
+</project>

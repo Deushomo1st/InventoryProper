@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection Coordination Service - Customers</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Protection Coordination Service', 
+                page: 'Customers', 
+                tabs: [
+                    {href:'/ui/protection/index.html', label:'Overview'},
+                    {href:'/ui/protection/schemes.html', label:'Customers'},
+                    {href:'/ui/protection/studies.html', label:'Orders'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="Search by code, name, email..." oninput="filterCustomers(this.value)">
+            <div class="actions">
+                <button class="btn-accent" onclick="showCreateModal()">+ NEW CUSTOMER</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Payment Terms</th>
+                    <th>Credit Limit</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="customers-tbody">
+                <tr><td colspan="8">Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Create/Edit Modal -->
+        <div id="modal-back" class="modal-back" style="display:none;">
+            <div class="modal">
+                <div class="modal-tag">ProtectionScheme</div>
+                <div class="modal-title" id="modal-title">New ProtectionScheme</div>
+                <form id="customer-form">
+                    <input type="hidden" id="cust-id">
+                    
+                    <div class="form-group">
+                        <label>Code</label>
+                        <input type="text" id="cust-code" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" id="cust-name" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="cust-email">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" id="cust-phone">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="cust-address" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment Terms</label>
+                            <input type="text" id="cust-terms" placeholder="e.g., Net 30">
+                        </div>
+                        <div class="form-group">
+                            <label>Credit Limit</label>
+                            <input type="number" id="cust-limit" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="cust-active" checked> Active
+                        </label>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-accent">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCustomers = [];
+
+        async function loadCustomers() {
+            try {
+                const res = await apiFetch('/protection/schemes');
+                if (!res || !res.ok) throw new Error('Failed to load customers');
+                allCustomers = await res.json();
+                renderCustomers(allCustomers);
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        function renderCustomers(customers) {
+            const tbody = document.getElementById('customers-tbody');
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8">No customers found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = customers.map(c => `
+                <tr>
+                    <td>${c.code}</td>
+                    <td>${c.name}</td>
+                    <td>${c.email || '—'}</td>
+                    <td>${c.phone || '—'}</td>
+                    <td>${c.paymentTerms || '—'}</td>
+                    <td>${c.creditLimit ? '$' + Number(c.creditLimit).toLocaleString() : '—'}</td>
+                    <td>${c.active ? '<span class="pill green">Active</span>' : '<span class="pill red">Inactive</span>'}</td>
+                    <td>
+                        <a href="#" class="action-link" onclick="editCustomer(${c.id}); return false;">Edit</a>
+                        <a href="#" class="action-link danger" onclick="deleteCustomer(${c.id}, '${c.name}'); return false;">Delete</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterCustomers(query) {
+            const q = query.toLowerCase();
+            const filtered = allCustomers.filter(c => 
+                c.code.toLowerCase().includes(q) ||
+                c.name.toLowerCase().includes(q) ||
+                (c.email && c.email.toLowerCase().includes(q))
+            );
+            renderCustomers(filtered);
+        }
+
+        function showCreateModal() {
+            document.getElementById('modal-title').textContent = 'New ProtectionScheme';
+            document.getElementById('customer-form').reset();
+            document.getElementById('cust-id').value = '';
+            document.getElementById('modal-back').classList.add('show');
+        }
+
+        function editCustomer(id) {
+            const c = allCustomers.find(x => x.id === id);
+            if (!c) return;
+            
+            document.getElementById('modal-title').textContent = 'Edit ProtectionScheme';
+            document.getElementById('cust-id').value = c.id;
+            document.getElementById('cust-code').value = c.code;
+            document.getElementById('cust-name').value = c.name;
+            document.getElementById('cust-email').value = c.email || '';
+            document.getElementById('cust-phone').value = c.phone || '';
+            document.getElementById('cust-address').value = c.address || '';
+            document.getElementById('cust-terms').value = c.paymentTerms || '';
+            document.getElementById('cust-limit').value = c.creditLimit || '';
+            document.getElementById('cust-active').checked = c.active;
+            
+            document.getElementById('modal-back').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-back').classList.remove('show');
+        }
+
+        document.getElementById('customer-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('cust-id').value;
+            const body = {
+                code: document.getElementById('cust-code').value,
+                name: document.getElementById('cust-name').value,
+                email: document.getElementById('cust-email').value,
+                phone: document.getElementById('cust-phone').value,
+                address: document.getElementById('cust-address').value,
+                paymentTerms: document.getElementById('cust-terms').value,
+                creditLimit: document.getElementById('cust-limit').value || null,
+                active: document.getElementById('cust-active').checked
+            };
+            
+            try {
+                if (id) {
+                    await apiFetch(`/protection/schemes/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+                } else {
+                    await apiFetch('/protection/schemes', { method: 'POST', body: JSON.stringify(body) });
+                }
+                closeModal();
+                loadCustomers();
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        });
+
+        async function deleteCustomer(id, name) {
+            confirmDanger({
+                title: 'Delete ProtectionScheme',
+                body: `Are you sure you want to delete "${name}"? This cannot be undone.`,
+                confirmLabel: 'Delete',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/protection/schemes/${id}`, { method: 'DELETE' });
+                        loadCustomers();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modal-back').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-back') closeModal();
+        });
+
+        // Auto-refresh
+        setInterval(loadCustomers, 10000);
+        window.addEventListener('focus', loadCustomers);
+
+        // Initial load
+        loadCustomers();
+    </script>
+</body>
+</html>

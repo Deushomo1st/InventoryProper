@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Price Lists — Document Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Document Service',
+        page: 'PriceLists',
+        tabs: [
+            { href: '/ui/document/index.html', label: 'Overview' },
+            { href: '/ui/document/documents.html', label: 'Suppliers' },
+            { href: '/ui/document/reviewers.html', label: 'Contacts' },
+            { href: '/ui/document/revisions.html', label: 'PriceLists' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Price Lists</h2>
+        <input type="text" id="pricelist-search" class="search-input" placeholder="Search by supplier, SKU, currency…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW PRICE LIST</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Document</th>
+            <th>SKU</th>
+            <th>Price</th>
+            <th>Currency</th>
+            <th>Valid From-To</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Price List</div>
+        <form id="form">
+            <input type="hidden" id="pl-id">
+            <div class="form-group">
+                <label for="pl-supplier">Document</label>
+                <select id="pl-supplier" required>
+                    <option value="">Select Document</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="pl-sku">SKU</label>
+                <select id="pl-sku" required>
+                    <option value="">Select SKU</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="pl-price">Unit Price</label>
+                <input type="number" id="pl-price" step="0.0001" required>
+            </div>
+            <div class="form-group">
+                <label for="pl-currency">Currency</label>
+                <input type="text" id="pl-currency" value="USD">
+            </div>
+            <div class="form-group">
+                <label for="pl-validfrom">Valid From</label>
+                <input type="date" id="pl-validfrom">
+            </div>
+            <div class="form-group">
+                <label for="pl-validto">Valid To</label>
+                <input type="date" id="pl-validto">
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="pl-active" checked>
+                <label for="pl-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allPriceLists = [];
+    let allSuppliers = [];
+    let allSkus = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/document/revisions');
+            if (!res) return;
+            allPriceLists = await res.json();
+            renderPriceLists();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadSuppliers(selectedId) {
+        try {
+            const res = await apiFetch('/document/documents');
+            if (!res) return;
+            allSuppliers = await res.json();
+            const sel = document.getElementById('pl-supplier');
+            sel.innerHTML = '<option value="">Select Document</option>';
+            for (const s of allSuppliers) {
+                sel.innerHTML += `<option value="${s.id}" ${s.id === selectedId ? 'selected' : ''}>${s.name}</option>`;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadSkus(selectedId) {
+        try {
+            const res = await apiFetch('/asset/units');
+            if (!res) return;
+            allSkus = await res.json();
+            const sel = document.getElementById('pl-sku');
+            sel.innerHTML = '<option value="">Select SKU</option>';
+            for (const sku of allSkus) {
+                sel.innerHTML += `<option value="${sku.id}" ${sku.id === selectedId ? 'selected' : ''}>${sku.skuCode || sku.code}</option>`;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderPriceLists() {
+        const q = (document.getElementById('pricelist-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allPriceLists.filter(p =>
+                (p.supplierName || '').toLowerCase().includes(q) ||
+                (String(p.skuId) || '').toLowerCase().includes(q) ||
+                (p.currency || '').toLowerCase().includes(q))
+            : allPriceLists;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No price lists match "' + q + '"' : 'No price lists yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(p => {
+            const validRange = (p.validFrom && p.validTo) ? `${p.validFrom} to ${p.validTo}` : (p.validFrom ? `from ${p.validFrom}` : (p.validTo ? `until ${p.validTo}` : '—'));
+            return `
+        <tr>
+          <td>${p.id}</td>
+          <td>${p.supplierName || '—'}</td>
+          <td>${p.skuId || '—'}</td>
+          <td>${p.unitPrice}</td>
+          <td>${p.currency}</td>
+          <td>${validRange}</td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editPL(${p.id})">Edit</button>
+              <button class="action-link danger" onclick="deletePL(${p.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Price List';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('pl-id').value = '';
+        document.getElementById('pl-active').checked = true;
+        document.getElementById('pl-currency').value = 'USD';
+        Promise.all([loadSuppliers(null), loadSkus(null)]).then(() => {
+            document.getElementById('modal').classList.add('show');
+        });
+    }
+
+    async function editPL(id) {
+        try {
+            const res = await apiFetch(`/document/revisions/${id}`);
+            if (!res) return;
+            const p = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Price List';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('pl-id').value = p.id;
+            document.getElementById('pl-price').value = p.unitPrice;
+            document.getElementById('pl-currency').value = p.currency;
+            document.getElementById('pl-validfrom').value = p.validFrom || '';
+            document.getElementById('pl-validto').value = p.validTo || '';
+            document.getElementById('pl-active').checked = p.active;
+            await Promise.all([loadSuppliers(p.supplierId || null), loadSkus(p.skuId || null)]);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load price list' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('pl-id').value;
+        const body = {
+            supplierId: parseInt(document.getElementById('pl-supplier').value),
+            skuId: parseInt(document.getElementById('pl-sku').value),
+            unitPrice: parseFloat(document.getElementById('pl-price').value),
+            currency: document.getElementById('pl-currency').value || 'USD',
+            validFrom: document.getElementById('pl-validfrom').value || null,
+            validTo: document.getElementById('pl-validto').value || null,
+            active: document.getElementById('pl-active').checked
+        };
+
+        try {
+            const url = id ? `/document/revisions/${id}` : '/document/revisions';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save price list', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save price list' });
+        }
+    });
+
+    function deletePL(id) {
+        confirmDanger({
+            title: 'Delete price list entry?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/document/revisions/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete price list', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete price list' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('pricelist-search').addEventListener('input', renderPriceLists);
+</script>
+</body>
+</html>

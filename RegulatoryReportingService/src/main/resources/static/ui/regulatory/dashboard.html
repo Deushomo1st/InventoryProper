@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporting - Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Reporting', 
+                page: 'Dashboard', 
+                tabs: [
+                    {href:'/ui/regulatory/index.html', label:'Overview'},
+                    {href:'/ui/regulatory/dashboard.html', label:'Dashboard'}
+                ] 
+            });
+        </script>
+
+        <div id="loading-msg" style="text-align:center; padding:3rem; color:#6b6b80;">Loading dashboard...</div>
+        <div id="dashboard-content" style="display:none;">
+            <!-- Stock Summary Panel -->
+            <div class="panel" style="margin-bottom:2rem;">
+                <h3 style="margin-bottom:1rem;">Stock Summary (All Warehouses)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>SKU ID</th>
+                            <th>SKU Code</th>
+                            <th>Total Qty (All Bins)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-body">
+                        <tr><td colspan="3" style="text-align:center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Orders Summary Panel -->
+            <div class="panel" style="margin-bottom:2rem;">
+                <h3 style="margin-bottom:1rem;">Purchase Orders by Status</h3>
+                <table class="data-table" id="po-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Count</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" style="text-align:center">Loading...</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top:2rem; margin-bottom:1rem;">Sales Orders by Status</h3>
+                <table class="data-table" id="so-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Count</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" style="text-align:center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Activity By User Panel -->
+            <div class="panel" style="margin-bottom:2rem;">
+                <h3 style="margin-bottom:1rem;">Activity by User</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Email</th>
+                            <th>Event Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-body">
+                        <tr><td colspan="3" style="text-align:center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recent Ledger Panel -->
+            <div class="panel">
+                <h3 style="margin-bottom:1rem;">Recent Ledger Entries (Last 10)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Delta</th>
+                            <th>Reason</th>
+                            <th>SKU Code</th>
+                            <th>Ref Doc</th>
+                            <th>User Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-body">
+                        <tr><td colspan="6" style="text-align:center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                const res = await apiFetch('/regulatory/dashboard');
+                if (!res || !res.ok) {
+                    alertModal({ title: 'Failed', body: 'Could not load dashboard data' });
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // Render stock summary
+                renderStockSummary(data.stockSummary);
+                
+                // Render orders summary
+                renderOrdersSummary(data.ordersSummary);
+                
+                // Render activity by user
+                renderActivityByUser(data.activityByUser);
+                
+                // Render recent ledger
+                renderRecentLedger(data.recentLedger);
+                
+                document.getElementById('loading-msg').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        function renderStockSummary(stockData) {
+            const tbody = document.getElementById('stock-body');
+            if (!stockData || stockData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">No stock data</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = stockData.map(item => `
+                <tr>
+                    <td>${item.sku_id}</td>
+                    <td>${item.sku_code}</td>
+                    <td>${item.total_qty}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderOrdersSummary(ordersData) {
+            // Purchase orders
+            const poBody = document.querySelector('#po-table tbody');
+            const poStatuses = ordersData.purchaseOrders;
+            if (!poStatuses || poStatuses.length === 0) {
+                poBody.innerHTML = '<tr><td colspan="3" style="text-align:center">No PO data</td></tr>';
+            } else {
+                poBody.innerHTML = poStatuses.map(item => `
+                    <tr>
+                        <td>${item.status}</td>
+                        <td>${item.cnt}</td>
+                        <td>${item.total}</td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Sales orders
+            const soBody = document.querySelector('#so-table tbody');
+            const soStatuses = ordersData.salesOrders;
+            if (!soStatuses || soStatuses.length === 0) {
+                soBody.innerHTML = '<tr><td colspan="3" style="text-align:center">No SO data</td></tr>';
+            } else {
+                soBody.innerHTML = soStatuses.map(item => `
+                    <tr>
+                        <td>${item.status}</td>
+                        <td>${item.cnt}</td>
+                        <td>${item.total}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function renderActivityByUser(activityData) {
+            const tbody = document.getElementById('activity-body');
+            if (!activityData || activityData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">No activity data</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = activityData.map(item => `
+                <tr>
+                    <td>${item.user_id}</td>
+                    <td>${item.email}</td>
+                    <td>${item.event_count}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderRecentLedger(ledgerData) {
+            const tbody = document.getElementById('ledger-body');
+            if (!ledgerData || ledgerData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No ledger data</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = ledgerData.map(item => `
+                <tr>
+                    <td>${new Date(item.created_at).toLocaleString()}</td>
+                    <td><span class="${item.delta >= 0 ? '' : 'text-danger'}">${item.delta >= 0 ? '+' : ''}${item.delta}</span></td>
+                    <td>${item.reason_code}</td>
+                    <td>${item.sku_code}</td>
+                    <td>${item.ref_doc_type}/${item.ref_doc_id}</td>
+                    <td>${item.user_email}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Load on page init
+        loadDashboard();
+    </script>
+</body>
+</html>

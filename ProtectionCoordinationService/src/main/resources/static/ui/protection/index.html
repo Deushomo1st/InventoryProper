@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection Coordination Service - Overview</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Protection Coordination Service', 
+                page: 'Overview', 
+                tabs: [
+                    {href:'/ui/protection/index.html', label:'Overview'},
+                    {href:'/ui/protection/schemes.html', label:'Customers'},
+                    {href:'/ui/protection/studies.html', label:'Orders'}
+                ] 
+            });
+        </script>
+
+        <div class="tile-grid" style="margin-top: 2rem;">
+            <a href="/ui/protection/schemes.html" class="tile">
+                <div class="tile-icon">👥</div>
+                <div class="tile-title">Customers</div>
+                <div class="tile-desc">Manage customer accounts and credit limits</div>
+            </a>
+            
+            <a href="/ui/protection/studies.html" class="tile">
+                <div class="tile-icon">📋</div>
+                <div class="tile-title">Orders</div>
+                <div class="tile-desc">Create and manage sales orders</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

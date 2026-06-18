@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products — Asset Management Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Asset Management Service',
+        page: 'Products',
+        tabs: [
+            { href: '/ui/asset/index.html', label: 'Overview' },
+            { href: '/ui/asset/classes.html', label: 'Categories' },
+            { href: '/ui/asset/models.html', label: 'Products' },
+            { href: '/ui/asset/units.html', label: 'SKUs' },
+            { href: '/ui/asset/specs.html', label: 'Attributes' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Products</h2>
+        <input type="text" id="product-search" class="search-input" placeholder="Search by code, name, brand, category…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW PRODUCT</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Brand</th>
+            <th>AssetClass</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">×</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create AssetModel</div>
+        <form id="form">
+            <input type="hidden" id="prod-id">
+            <div class="form-group" id="prod-code-row">
+                <label for="prod-code">Code</label>
+                <input type="text" id="prod-code">
+                <small>Auto-generated as <code>PROD-NNNN</code> when creating; shown here only when editing.</small>
+            </div>
+            <div class="form-group" id="prod-quantity-row" style="display: none;">
+                <label for="prod-quantity">Quantity</label>
+                <input type="number" id="prod-quantity" value="1" min="1" max="100">
+                <small>Number of products to create at once. Each gets the next sequential <code>PROD-NNNN</code> code.</small>
+            </div>
+            <div class="form-group">
+                <label for="prod-name">Name</label>
+                <input type="text" id="prod-name" required>
+            </div>
+            <div class="form-group">
+                <label for="prod-brand">Brand</label>
+                <input type="text" id="prod-brand">
+            </div>
+            <div class="form-group">
+                <label for="prod-desc">Description</label>
+                <input type="text" id="prod-desc">
+            </div>
+            <div class="form-group">
+                <label for="prod-cat">AssetClass</label>
+                <select id="prod-cat">
+                    <option value="">None</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="prod-active" checked>
+                <label for="prod-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allProducts = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/asset/models');
+            if (!res) return;
+            allProducts = await res.json();
+            renderProducts();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderProducts() {
+        const q = (document.getElementById('product-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allProducts.filter(p =>
+                (p.code || '').toLowerCase().includes(q) ||
+                (p.name || '').toLowerCase().includes(q) ||
+                (p.brand || '').toLowerCase().includes(q) ||
+                (p.categoryName || '').toLowerCase().includes(q) ||
+                (p.description || '').toLowerCase().includes(q))
+            : allProducts;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No products match \"' + q + '\"' : 'No products yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(p => `
+        <tr>
+          <td>${p.code}</td>
+          <td>${p.name}</td>
+          <td>${p.brand || '—'}</td>
+          <td>${p.categoryName || '—'}</td>
+          <td><span class="pill ${p.active ? 'active' : 'inactive'}">${p.active ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editProd(${p.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteProd(${p.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadCategories(selectedId) {
+        try {
+            const res = await apiFetch('/asset/classes');
+            if (!res) return;
+            const cats = await res.json();
+            const sel = document.getElementById('prod-cat');
+            sel.innerHTML = '<option value="">None</option>';
+            function flatten(nodes, depth) {
+                let flat = [];
+                for (const n of nodes) {
+                    const prefix = '\u00A0\u00A0'.repeat(depth);
+                    sel.innerHTML += `<option value="${n.id}" ${n.id === selectedId ? 'selected' : ''}>${prefix}${n.name}</option>`;
+                    if (n.children) flat = flat.concat(flatten(n.children, depth + 1));
+                }
+                return flat;
+            }
+            flatten(cats, 0);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create AssetModel';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('prod-id').value = '';
+        document.getElementById('prod-active').checked = true;
+        document.getElementById('prod-quantity').value = 1;
+        // Code is auto-generated on create — hide the code row, show the quantity row.
+        document.getElementById('prod-code-row').style.display = 'none';
+        document.getElementById('prod-quantity-row').style.display = '';
+        loadCategories(null);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editProd(id) {
+        try {
+            const res = await apiFetch(`/asset/models/${id}`);
+            if (!res) return;
+            const p = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit AssetModel';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('prod-id').value = p.id;
+            document.getElementById('prod-code').value = p.code;
+            document.getElementById('prod-name').value = p.name;
+            document.getElementById('prod-brand').value = p.brand || '';
+            document.getElementById('prod-desc').value = p.description || '';
+            document.getElementById('prod-active').checked = p.active;
+            // Edit mode: show the code (the admin may rename), hide quantity (one at a time).
+            document.getElementById('prod-code-row').style.display = '';
+            document.getElementById('prod-quantity-row').style.display = 'none';
+            loadCategories(p.categoryId || null);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load product' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('prod-id').value;
+        const body = {
+            name: document.getElementById('prod-name').value,
+            brand: document.getElementById('prod-brand').value || null,
+            description: document.getElementById('prod-desc').value || null,
+            active: document.getElementById('prod-active').checked,
+            categoryId: document.getElementById('prod-cat').value ? parseInt(document.getElementById('prod-cat').value) : null
+        };
+        if (id) {
+            // Edit — allow renaming the code, single record only.
+            body.code = document.getElementById('prod-code').value;
+        } else {
+            // Create — backend auto-generates the code(s); pass quantity for bulk creation.
+            body.quantity = parseInt(document.getElementById('prod-quantity').value) || 1;
+        }
+
+        try {
+            const url = id ? `/asset/models/${id}` : '/asset/models';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save product', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save product' });
+        }
+    });
+
+    function deleteProd(id) {
+        confirmDanger({
+            title: 'Delete product?',
+            body: 'This is permanent. Any SKUs under this product will become orphaned.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/asset/models/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete product', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete product' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('product-search').addEventListener('input', renderProducts);
+</script>
+</body>
+</html>

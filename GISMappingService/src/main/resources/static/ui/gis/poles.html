@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bins &mdash; Substation Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Substation Service',
+        page: 'Bins',
+        tabs: [
+            { href: '/ui/gis/index.html', label: 'Overview' },
+            { href: '/ui/gis/substations.html', label: 'Warehouses' },
+            { href: '/ui/gis/feeders.html', label: 'Zones' },
+            { href: '/ui/gis/poles.html', label: 'Bins' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Bins</h2>
+        <input type="text" id="bin-search" class="search-input" placeholder="Search by warehouse, zone, or code&hellip;" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW BIN</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Substation</th>
+            <th>Feeder</th>
+            <th>Code</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Pole</div>
+        <form id="form">
+            <input type="hidden" id="bin-id">
+            <div class="form-group">
+                <label for="bin-warehouse">Substation</label>
+                <select id="bin-warehouse" required></select>
+            </div>
+            <div class="form-group">
+                <label for="bin-zone">Feeder</label>
+                <select id="bin-zone" required></select>
+            </div>
+            <div class="form-group">
+                <label for="bin-code">Code</label>
+                <input type="text" id="bin-code" required>
+                <small>Pole location code like A-01-01, B-02-03.</small>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="bin-active" checked>
+                <label for="bin-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allBins = [];
+    let allWarehouses = [];
+    let allZones = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/gis/poles');
+            if (!res) return;
+            allBins = await res.json();
+            renderBins();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadWarehouses(selectedId) {
+        try {
+            const res = await apiFetch('/gis/substations');
+            if (!res) return;
+            allWarehouses = await res.json();
+            const sel = document.getElementById('bin-warehouse');
+            sel.innerHTML = '<option value="">Select</option>';
+            allWarehouses.forEach(w => {
+                sel.innerHTML += `<option value="${w.id}" ${w.id === selectedId ? 'selected' : ''}>${w.code} (${w.name})</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadZones(warehouseId, selectedZoneId) {
+        try {
+            const res = await apiFetch('/gis/feeders');
+            if (!res) return;
+            allZones = await res.json();
+            const filtered = warehouseId ? allZones.filter(z => z.warehouseId === warehouseId) : allZones;
+            const sel = document.getElementById('bin-zone');
+            sel.innerHTML = '<option value="">Select</option>';
+            filtered.forEach(z => {
+                sel.innerHTML += `<option value="${z.id}" ${z.id === selectedZoneId ? 'selected' : ''}>${z.code} (${z.name})</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // When warehouse changes, filter zones
+    document.addEventListener('DOMContentLoaded', () => {
+        const whSel = document.getElementById('bin-warehouse');
+        if (whSel) {
+            whSel.addEventListener('change', () => {
+                const whId = whSel.value ? parseInt(whSel.value) : null;
+                loadZones(whId, null);
+            });
+        }
+    });
+
+    function renderBins() {
+        const q = (document.getElementById('bin-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allBins.filter(b =>
+                (b.warehouseName || '').toLowerCase().includes(q) ||
+                (b.zoneName || '').toLowerCase().includes(q) ||
+                (b.code || '').toLowerCase().includes(q))
+            : allBins;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No bins match "' + q + '"' : 'No bins yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(b => `
+        <tr>
+          <td>${b.id}</td>
+          <td>${b.warehouseName}</td>
+          <td>${b.zoneName}</td>
+          <td>${b.code}</td>
+          <td><span class="pill ${b.active ? 'active' : 'inactive'}">${b.active ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editBin(${b.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteBin(${b.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Pole';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('bin-id').value = '';
+        document.getElementById('bin-active').checked = true;
+        loadWarehouses(null);
+        loadZones(null, null);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editBin(id) {
+        try {
+            const res = await apiFetch(`/gis/poles/${id}`);
+            if (!res) return;
+            const b = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Pole';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('bin-id').value = b.id;
+            document.getElementById('bin-code').value = b.code;
+            document.getElementById('bin-active').checked = b.active;
+            loadWarehouses(b.warehouseId);
+            setTimeout(() => loadZones(b.warehouseId, b.zoneId), 100);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load bin' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('bin-id').value;
+        const body = {
+            zoneId: parseInt(document.getElementById('bin-zone').value),
+            code: document.getElementById('bin-code').value,
+            active: document.getElementById('bin-active').checked
+        };
+
+        try {
+            const url = id ? `/gis/poles/${id}` : '/gis/poles';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save bin', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save bin' });
+        }
+    });
+
+    function deleteBin(id) {
+        confirmDanger({
+            title: 'Delete bin?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/gis/poles/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete bin', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete bin' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('bin-search').addEventListener('input', renderBins);
+</script>
+</body>
+</html>

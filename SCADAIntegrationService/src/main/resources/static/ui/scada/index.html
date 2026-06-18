@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SCADA Integration Service — Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'SCADA Integration Service',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/scada/index.html', label: 'Overview' },
+            { href: '/ui/scada/receipts.html', label: 'Receipts' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <h1>SCADA Integration Service</h1>
+    <p class="sub">Goods receipts from approved purchase orders. Scan, count, and put away incoming stock.</p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+        <a class="tile" href="/ui/scada/receipts.html">
+            <div class="tile-name">Goods Receipts</div>
+            <div class="tile-desc">Create receipts from POs, record quantities received, assign bins, and complete to post inventory adjustments.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

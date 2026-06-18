@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SKUs — Asset Management Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Asset Management Service',
+        page: 'SKUs',
+        tabs: [
+            { href: '/ui/asset/index.html', label: 'Overview' },
+            { href: '/ui/asset/classes.html', label: 'Categories' },
+            { href: '/ui/asset/models.html', label: 'Products' },
+            { href: '/ui/asset/units.html', label: 'SKUs' },
+            { href: '/ui/asset/specs.html', label: 'Attributes' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>SKUs</h2>
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW SKU</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>SKU Code</th>
+            <th>Name</th>
+            <th>AssetModel</th>
+            <th>UoM ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">×</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create SKU</div>
+        <form id="form">
+            <input type="hidden" id="sku-id">
+            <!-- On Create: SKU Code is auto-generated, this field is read-only and shows the live preview.
+                 On Edit: shows the existing code (immutable once issued). -->
+            <div class="form-group">
+                <label for="sku-code">SKU Code</label>
+                <input type="text" id="sku-code" readonly style="opacity: 0.7;">
+                <small id="sku-code-hint">Auto-generated from brand + variant on save.</small>
+            </div>
+            <div class="form-group">
+                <label for="sku-name">Name</label>
+                <input type="text" id="sku-name" required placeholder="e.g., Coca-Cola 12oz Can">
+            </div>
+            <div class="form-group">
+                <label for="sku-product">AssetModel</label>
+                <select id="sku-product" required onchange="updateCodePreview()">
+                    <option value="">Select</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sku-variant">Variant</label>
+                <input type="text" id="sku-variant" placeholder="e.g., 12OZ-CAN, XPS13-16GB-512, BLACK-MESH" oninput="updateCodePreview()">
+                <small>The variant portion of the auto-generated code. Uppercased and slugified on save.</small>
+            </div>
+            <div class="form-group">
+                <label for="sku-uom">Unit of Measure</label>
+                <select id="sku-uom" required>
+                    <option value="">Select</option>
+                </select>
+                <small>Loaded from UoM service. If empty, start UoM service or add units in /ui/uom/units.html.</small>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="sku-active" checked>
+                <label for="sku-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Cache of UoMs by id, so the table can show "EA" instead of "1".
+    let uomById = {};
+
+    async function load() {
+        try {
+            // Pull UoMs first so the table can denormalize uomId → code.
+            await loadUoms(null);
+            const res = await apiFetch('/asset/units');
+            if (!res) return;
+            const skus = await res.json();
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = skus.map(s => `
+        <tr>
+          <td>${s.skuCode}</td>
+          <td>${s.name}</td>
+          <td>${s.productName || '—'}</td>
+          <td>${uomById[s.uomId] ? uomById[s.uomId].code : (s.uomId || '—')}</td>
+          <td><span class="pill ${s.active ? 'active' : 'inactive'}">${s.active ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editSku(${s.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteSku(${s.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadProducts(selectedId) {
+        try {
+            const res = await apiFetch('/asset/models');
+            if (!res) return;
+            const products = await res.json();
+            productById = {};
+            products.forEach(p => { productById[p.id] = p; });
+            const sel = document.getElementById('sku-product');
+            sel.innerHTML = '<option value="">Select</option>';
+            products.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.name} (${p.code})</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // Fetch UoMs from UomService via the gateway. Populates the select in the
+    // modal AND the uomById cache used by the table. Tolerates UoM service
+    // being down — leaves the dropdown empty + table shows raw ID as fallback.
+    async function loadUoms(selectedId) {
+        const sel = document.getElementById('sku-uom');
+        try {
+            const res = await apiFetch('/uom/units');
+            if (!res || !res.ok) {
+                if (sel) sel.innerHTML = '<option value="">UoM service offline</option>';
+                return;
+            }
+            const units = await res.json();
+            uomById = {};
+            units.forEach(u => { uomById[u.id] = u; });
+            if (sel) {
+                sel.innerHTML = '<option value="">Select</option>';
+                units.filter(u => u.active !== false).forEach(u => {
+                    sel.innerHTML += `<option value="${u.id}" ${u.id === selectedId ? 'selected' : ''}>${u.code}${u.name ? ' — ' + u.name : ''}</option>`;
+                });
+            }
+        } catch (err) {
+            console.error('Failed to load UoMs:', err);
+        }
+    }
+
+    // Cache of products by id so the code preview can read the brand without
+    // an extra fetch. Filled by loadProducts() each time the modal opens.
+    let productById = {};
+
+    // Mirror of slug() in the backend so the preview matches what will actually
+    // be persisted: uppercase, non-alphanumerics → hyphens, trim hyphens.
+    function slug(raw) {
+        if (!raw) return '';
+        return raw.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function updateCodePreview() {
+        const id = document.getElementById('sku-id').value;
+        if (id) return;  // Edit mode: show the existing code as-is, no preview.
+        const prodSel = document.getElementById('sku-product');
+        const productId = parseInt(prodSel.value);
+        const product = productById[productId];
+        const brand = (product && product.brand && product.brand.trim()) ? product.brand : (product && product.code);
+        const variant = document.getElementById('sku-variant').value.trim();
+        const brandSlug = slug(brand) || 'SKU';
+        const variantSlug = slug(variant) || 'VAR';
+        const preview = `${brandSlug}-${variantSlug}`;
+        document.getElementById('sku-code').value = preview;
+        document.getElementById('sku-code-hint').textContent = product
+            ? `Auto-generates as "${preview}" on save (or "${preview}-001" etc. if it collides).`
+            : 'Pick a product to see the preview.';
+    }
+
+    async function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create SKU';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('sku-id').value = '';
+        document.getElementById('sku-active').checked = true;
+        document.getElementById('sku-code').value = '';
+        document.getElementById('sku-code-hint').textContent = 'Auto-generated from brand + variant on save.';
+        await Promise.all([loadProducts(null), loadUoms(null)]);
+        updateCodePreview();
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editSku(id) {
+        try {
+            const res = await apiFetch(`/asset/units/${id}`);
+            if (!res) return;
+            const s = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit SKU';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('sku-id').value = s.id;
+            document.getElementById('sku-code').value = s.skuCode;
+            document.getElementById('sku-code-hint').textContent = 'SKU codes are immutable once issued.';
+            document.getElementById('sku-name').value = s.name;
+            document.getElementById('sku-variant').value = s.variant || '';
+            document.getElementById('sku-active').checked = s.active;
+            await Promise.all([loadProducts(s.productId), loadUoms(s.uomId)]);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load SKU' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('sku-id').value;
+        // Drop skuCode from the request — backend always generates it on create
+        // and ignores it on update (codes are immutable once issued).
+        const body = {
+            name: document.getElementById('sku-name').value,
+            variant: document.getElementById('sku-variant').value.trim(),
+            productId: parseInt(document.getElementById('sku-product').value),
+            uomId: parseInt(document.getElementById('sku-uom').value),
+            active: document.getElementById('sku-active').checked
+        };
+
+        try {
+            const url = id ? `/asset/units/${id}` : '/asset/units';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save SKU', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save SKU' });
+        }
+    });
+
+    function deleteSku(id) {
+        confirmDanger({
+            title: 'Delete SKU?',
+            body: 'This is permanent. If this SKU is referenced by purchase orders or inventory, deletion will be rejected.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/asset/units/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete SKU', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete SKU' });
+                }
+            }
+        });
+    }
+
+    load();
+</script>
+</body>
+</html>

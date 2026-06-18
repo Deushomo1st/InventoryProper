@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Orders — Work Order Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Work Order Service',
+        page: 'Orders',
+        tabs: [
+            { href: '/ui/workorder/index.html', label: 'Overview' },
+            { href: '/ui/workorder/orders.html', label: 'Orders' },
+            { href: '/ui/workorder/approvals.html', label: 'Approvals' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Purchase Orders</h2>
+        <input type="text" id="order-search" class="search-input" placeholder="Search by code, supplier, status…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW ORDER</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Document</th>
+            <th>Substation</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th>Lines</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Purchase Order</div>
+        <form id="form">
+            <input type="hidden" id="po-id">
+            <div class="form-group">
+                <label for="po-supplier">Document</label>
+                <select id="po-supplier" required>
+                    <option value="">Select Document</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="po-warehouse">Substation</label>
+                <select id="po-warehouse" required>
+                    <option value="">Select Substation</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="po-notes">Notes</label>
+                <input type="text" id="po-notes">
+            </div>
+            <div class="form-group">
+                <label>Line Items</label>
+                <div id="lines-container"></div>
+                <button type="button" class="action-link" onclick="addLineRow()" style="margin-top: 8px;">+ Add Line</button>
+            </div>
+            <div class="form-row" style="justify-content: space-between; margin-top: 16px;">
+                <strong>Grand Total: <span id="grand-total">0.00</span></strong>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allOrders = [];
+    let allSuppliers = [];
+    let allWarehouses = [];
+    let allSkus = [];
+    let lineCounter = 0;
+
+    async function load() {
+        try {
+            const res = await apiFetch('/workorder/orders');
+            if (!res) return;
+            allOrders = await res.json();
+            renderOrders();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadSuppliers() {
+        const res = await apiFetch('/document/documents');
+        if (!res || !res.ok) throw new Error('SupplierService');
+        allSuppliers = await res.json();
+    }
+
+    async function loadWarehouses() {
+        const res = await apiFetch('/gis/substations');
+        if (!res || !res.ok) throw new Error('WarehouseService');
+        allWarehouses = await res.json();
+    }
+
+    async function loadSkus() {
+        const res = await apiFetch('/asset/units');
+        if (!res || !res.ok) throw new Error('CatalogService');
+        allSkus = await res.json();
+    }
+
+    function renderOrders() {
+        const q = (document.getElementById('order-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allOrders.filter(o =>
+                (o.code || '').toLowerCase().includes(q) ||
+                (String(o.supplierId) || '').toLowerCase().includes(q) ||
+                (o.status || '').toLowerCase().includes(q))
+            : allOrders;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">No orders yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = filtered.map(o => {
+            const statusClass = o.status === 'APPROVED' ? 'active' : (o.status === 'DRAFT' ? '' : 'inactive');
+            let actions = '';
+            if (o.status === 'DRAFT') {
+                actions = `<button class="action-link" onclick="editPO(${o.id})">Edit</button>
+                           <button class="action-link" onclick="submitPO(${o.id})">Submit</button>
+                           <button class="action-link danger" onclick="deletePO(${o.id})">Delete</button>`;
+            } else if (o.status === 'SUBMITTED') {
+                const canApprove = myPerms().includes('po.approve');
+                if (canApprove) {
+                    actions = `<button class="action-link" onclick="approvePO(${o.id})">Approve</button>
+                               <button class="action-link danger" onclick="rejectPO(${o.id})">Reject</button>`;
+                }
+            }
+            return `
+        <tr>
+          <td>${o.code}</td>
+          <td>${o.supplierId}</td>
+          <td>${o.warehouseId}</td>
+          <td><span class="pill ${statusClass}">${o.status}</span></td>
+          <td>${o.totalAmount} ${o.currency}</td>
+          <td>${o.lineCount}</td>
+          <td><div class="row-actions">${actions}</div></td>
+        </tr>
+      `;
+        }).join('');
+    }
+
+    function addLineRow(skuId, qty, unitPrice) {
+        lineCounter++;
+        const container = document.getElementById('lines-container');
+        const div = document.createElement('div');
+        div.className = 'form-row';
+        div.style.marginBottom = '8px';
+        div.innerHTML = `
+            <select class="line-sku" data-line="${lineCounter}" required style="flex: 2; margin-right: 8px;">
+                <option value="">Select SKU</option>
+                ${allSkus.map(s => `<option value="${s.id}" ${s.id == skuId ? 'selected' : ''}>${s.skuCode || s.code}</option>`).join('')}
+            </select>
+            <input type="number" class="line-qty" data-line="${lineCounter}" placeholder="Qty" step="0.0001" value="${qty || ''}" required style="flex: 1; margin-right: 8px;">
+            <input type="number" class="line-price" data-line="${lineCounter}" placeholder="Unit Price" step="0.0001" value="${unitPrice || ''}" required style="flex: 1; margin-right: 8px;">
+            <span class="line-total" data-line="${lineCounter}" style="flex: 1; text-align: right;">0.00</span>
+            <button type="button" class="action-link danger" onclick="removeLineRow(${lineCounter})" style="margin-left: 8px;">&times;</button>
+        `;
+        container.appendChild(div);
+
+        const qtyInput = div.querySelector(`.line-qty[data-line="${lineCounter}"]`);
+        const priceInput = div.querySelector(`.line-price[data-line="${lineCounter}"]`);
+        qtyInput.addEventListener('input', recalcGrandTotal);
+        priceInput.addEventListener('input', recalcGrandTotal);
+        recalcGrandTotal();
+    }
+
+    function removeLineRow(lineNum) {
+        const row = document.querySelector(`[data-line="${lineNum}"]`).closest('.form-row');
+        row.remove();
+        recalcGrandTotal();
+    }
+
+    function recalcGrandTotal() {
+        let total = 0;
+        document.querySelectorAll('.line-qty').forEach((qtyInput, idx) => {
+            const qty = parseFloat(qtyInput.value) || 0;
+            const price = parseFloat(document.querySelectorAll('.line-price')[idx].value) || 0;
+            const lineTotal = qty * price;
+            document.querySelectorAll('.line-total')[idx].textContent = lineTotal.toFixed(2);
+            total += lineTotal;
+        });
+        document.getElementById('grand-total').textContent = total.toFixed(2);
+    }
+
+    async function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Purchase Order';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('po-id').value = '';
+        document.getElementById('lines-container').innerHTML = '';
+        lineCounter = 0;
+        document.getElementById('grand-total').textContent = '0.00';
+
+        try {
+            await Promise.all([loadSuppliers(), loadWarehouses(), loadSkus()]);
+        } catch (err) {
+            alertModal({ title: `${err.message} unavailable`, body: `Start ${err.message} and try again.` });
+            return;
+        }
+
+        const supSel = document.getElementById('po-supplier');
+        supSel.innerHTML = '<option value="">Select Document</option>';
+        for (const s of allSuppliers) {
+            supSel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+        }
+
+        const whSel = document.getElementById('po-warehouse');
+        whSel.innerHTML = '<option value="">Select Substation</option>';
+        for (const w of allWarehouses) {
+            whSel.innerHTML += `<option value="${w.id}">${w.code}</option>`;
+        }
+
+        addLineRow();
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editPO(id) {
+        try {
+            const res = await apiFetch(`/workorder/orders/${id}`);
+            if (!res) return;
+            const po = await res.json();
+            if (po.status !== 'DRAFT') {
+                alertModal({ title: 'Cannot edit', body: 'Only DRAFT orders can be edited.' });
+                return;
+            }
+
+            document.getElementById('modal-title').textContent = 'Edit Purchase Order';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('po-id').value = po.id;
+
+            try {
+                await Promise.all([loadSuppliers(), loadWarehouses(), loadSkus()]);
+            } catch (err) {
+                alertModal({ title: `${err.message} unavailable`, body: `Start ${err.message} and try again.` });
+                return;
+            }
+
+            const supSel = document.getElementById('po-supplier');
+            supSel.innerHTML = '<option value="">Select Document</option>';
+            for (const s of allSuppliers) {
+                supSel.innerHTML += `<option value="${s.id}" ${s.id == po.supplierId ? 'selected' : ''}>${s.name}</option>`;
+            }
+
+            const whSel = document.getElementById('po-warehouse');
+            whSel.innerHTML = '<option value="">Select Substation</option>';
+            for (const w of allWarehouses) {
+                whSel.innerHTML += `<option value="${w.id}" ${w.id == po.warehouseId ? 'selected' : ''}>${w.code}</option>`;
+            }
+
+            document.getElementById('po-notes').value = po.notes || '';
+            document.getElementById('lines-container').innerHTML = '';
+            lineCounter = 0;
+
+            if (po.lines && po.lines.length > 0) {
+                for (const line of po.lines) {
+                    addLineRow(line.skuId, line.qty, line.unitPrice);
+                }
+            } else {
+                addLineRow();
+            }
+
+            recalcGrandTotal();
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load order' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('po-id').value;
+        const lines = [];
+        document.querySelectorAll('#lines-container .form-row').forEach(row => {
+            const skuId = row.querySelector('.line-sku').value;
+            const qty = row.querySelector('.line-qty').value;
+            const unitPrice = row.querySelector('.line-price').value;
+            if (skuId && qty && unitPrice) {
+                lines.push({ skuId: parseInt(skuId), qty: parseFloat(qty), unitPrice: parseFloat(unitPrice) });
+            }
+        });
+
+        const body = {
+            supplierId: parseInt(document.getElementById('po-supplier').value),
+            warehouseId: parseInt(document.getElementById('po-warehouse').value),
+            notes: document.getElementById('po-notes').value || null,
+            lines: lines
+        };
+
+        try {
+            const url = id ? `/workorder/orders/${id}` : '/workorder/orders';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save order', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save order' });
+        }
+    });
+
+    async function submitPO(id) {
+        confirmDanger({
+            title: 'Submit order?',
+            body: 'This will lock the order for editing and send it for approval.',
+            confirmLabel: 'SUBMIT',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/workorder/orders/${id}/submit`, { method: 'POST' });
+                    if (!res || !res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to submit order', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to submit order' });
+                }
+            }
+        });
+    }
+
+    async function approvePO(id) {
+        confirmDanger({
+            title: 'Approve order?',
+            body: 'This will approve the purchase order.',
+            confirmLabel: 'APPROVE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/workorder/orders/${id}/approve`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reason: 'Approved via UI' })
+                    });
+                    if (!res || !res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to approve order', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to approve order' });
+                }
+            }
+        });
+    }
+
+    async function rejectPO(id) {
+        const reason = prompt('Reason for rejection:');
+        if (!reason) return;
+        try {
+            const res = await apiFetch(`/workorder/orders/${id}/reject`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason })
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to reject order', body: err.message });
+                return;
+            }
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to reject order' });
+        }
+    }
+
+    function deletePO(id) {
+        confirmDanger({
+            title: 'Delete order?',
+            body: 'This is permanent. Only DRAFT orders can be deleted.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/workorder/orders/${id}`, { method: 'DELETE' });
+                    if (!res || !res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete order', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete order' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('order-search').addEventListener('input', renderOrders);
+</script>
+</body>
+</html>

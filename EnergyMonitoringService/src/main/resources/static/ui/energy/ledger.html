@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Ledger — Energy Monitoring Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Energy Monitoring Service',
+        page: 'Ledger',
+        tabs: [
+            { href: '/ui/energy/index.html', label: 'Overview' },
+            { href: '/ui/energy/current.html', label: 'Stock Levels' },
+            { href: '/ui/energy/ledger.html', label: 'Ledger' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Stock Ledger</h2>
+        <input type="text" id="ledger-search" class="search-input" placeholder="Search by SKU, warehouse, reason…" autocomplete="off">
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>When</th>
+            <th>SKU</th>
+            <th>Substation</th>
+            <th>Pole</th>
+            <th>Delta</th>
+            <th>Reason</th>
+            <th>By Whom</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<script>
+    let allLedgers = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/energy/ledger');
+            if (!res) return;
+            allLedgers = await res.json();
+            renderLedgers();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderLedgers() {
+        const q = (document.getElementById('ledger-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allLedgers.filter(l =>
+                (String(l.skuId) || '').toLowerCase().includes(q) ||
+                (String(l.warehouseId) || '').toLowerCase().includes(q) ||
+                (l.reasonCode || '').toLowerCase().includes(q))
+            : allLedgers;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No ledger entries match "' + q + '"' : 'No ledger entries yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(l => `
+        <tr>
+          <td>${l.createdAt}</td>
+          <td>${l.skuId}</td>
+          <td>${l.warehouseId}</td>
+          <td>${l.binId}</td>
+          <td style="color: ${l.delta >= 0 ? 'var(--success)' : 'var(--danger)'}">${l.delta >= 0 ? '+' : ''}${l.delta}</td>
+          <td>${l.reasonCode}</td>
+          <td>${l.userId}</td>
+        </tr>
+      `).join('');
+    }
+
+    load();
+    document.getElementById('ledger-search').addEventListener('input', renderLedgers);
+</script>
+</body>
+</html>

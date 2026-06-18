@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Approvals — Work Order Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Work Order Service',
+        page: 'Approvals',
+        tabs: [
+            { href: '/ui/workorder/index.html', label: 'Overview' },
+            { href: '/ui/workorder/orders.html', label: 'Orders' },
+            { href: '/ui/workorder/approvals.html', label: 'Approvals' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Approval History</h2>
+        <input type="text" id="approval-search" class="search-input" placeholder="Search by PO, approver, action…" autocomplete="off">
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>PO ID</th>
+            <th>Approver</th>
+            <th>Action</th>
+            <th>Reason</th>
+            <th>When</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<script>
+    let allApprovals = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/workorder/approvals');
+            if (!res) return;
+            allApprovals = await res.json();
+            renderApprovals();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderApprovals() {
+        const q = (document.getElementById('approval-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allApprovals.filter(a =>
+                (String(a.purchaseOrderId) || '').toLowerCase().includes(q) ||
+                (String(a.approverId) || '').toLowerCase().includes(q) ||
+                (a.action || '').toLowerCase().includes(q))
+            : allApprovals;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">No approval records yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = filtered.map(a => `
+        <tr>
+          <td>${a.purchaseOrderId}</td>
+          <td>${a.approverId}</td>
+          <td><span class="pill ${a.action === 'APPROVED' ? 'active' : 'inactive'}">${a.action}</span></td>
+          <td>${a.reason || '—'}</td>
+          <td>${a.createdAt}</td>
+        </tr>
+      `).join('');
+    }
+
+    load();
+    document.getElementById('approval-search').addEventListener('input', renderApprovals);
+</script>
+</body>
+</html>

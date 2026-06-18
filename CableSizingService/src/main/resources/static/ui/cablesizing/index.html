@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replenishment - Overview</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Replenishment', 
+                page: 'Overview', 
+                tabs: [
+                    {href:'/ui/cablesizing/index.html', label:'Overview'},
+                    {href:'/ui/cablesizing/requests.html', label:'Rules'},
+                    {href:'/ui/cablesizing/results.html', label:'Suggestions'}
+                ] 
+            });
+        </script>
+
+        <div class="tile-grid" style="margin-top: 2rem;">
+            <a href="/ui/cablesizing/requests.html" class="tile">
+                <div class="tile-title">Rules</div>
+                <div class="tile-desc">Manage reorder rules per SKU per warehouse</div>
+            </a>
+            <a href="/ui/cablesizing/results.html" class="tile">
+                <div class="tile-title">Suggestions</div>
+                <div class="tile-desc">View and act on auto-generated replenishment suggestions</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

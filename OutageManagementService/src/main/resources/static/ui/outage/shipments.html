@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outage Management Service - Shipments</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Outage Management Service', 
+                page: 'Shipments', 
+                tabs: [
+                    {href:'/ui/outage/index.html', label:'Overview'},
+                    {href:'/ui/outage/events.html', label:'Shipments'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="Search by code, status..." oninput="filterShipments(this.value)">
+            <div class="actions">
+                <button class="btn-accent" onclick="showCreateModal()">+ NEW SHIPMENT</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Sales Order</th>
+                    <th>Substation</th>
+                    <th>Status</th>
+                    <th>Lines</th>
+                    <th>Carrier</th>
+                    <th>Tracking</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="shipments-tbody">
+                <tr><td colspan="9">Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Create/Edit Modal -->
+        <div id="modal-back" class="modal-back" style="display:none;">
+            <div class="modal">
+                <div class="modal-tag">OutageEvent</div>
+                <div class="modal-title" id="modal-title">New OutageEvent</div>
+                <form id="shipment-form">
+                    <input type="hidden" id="ship-id">
+                    
+                    <div class="form-group">
+                        <label>Sales Order *</label>
+                        <select id="ship-so" required onchange="loadSOLines()">
+                            <option value="">Select sales order...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Substation *</label>
+                        <select id="ship-warehouse" required>
+                            <option value="">Select warehouse...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="ship-notes" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Line Items</label>
+                        <div id="lines-container"></div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-accent">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allShipments = [];
+        let allSOs = [];
+        let allWarehouses = [];
+        let allBins = [];
+        let currentSOLines = [];
+
+        async function loadShipments() {
+            try {
+                const res = await apiFetch('/outage/events');
+                if (!res || !res.ok) throw new Error('Failed to load shipments');
+                allShipments = await res.json();
+                renderShipments(allShipments);
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        function renderShipments(shipments) {
+            const tbody = document.getElementById('shipments-tbody');
+            if (shipments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9">No shipments found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = shipments.map(s => {
+                const perms = myPerms();
+                let actions = '';
+                if (s.status === 'DRAFT') {
+                    actions = `
+                        <a href="#" class="action-link" onclick="shipShipment(${s.id}); return false;">Ship</a>
+                        <a href="#" class="action-link danger" onclick="deleteShipment(${s.id}, '${s.code}'); return false;">Delete</a>
+                    `;
+                } else {
+                    actions = '<span style="color: var(--muted);">View only</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td>${s.code}</td>
+                        <td>SO-${s.salesOrderId}</td>
+                        <td>WH-${s.warehouseId}</td>
+                        <td><span class="pill ${s.status === 'SHIPPED' ? 'green' : 'yellow'}">${s.status}</span></td>
+                        <td>${s.lineCount || 0}</td>
+                        <td>${s.carrier || '—'}</td>
+                        <td>${s.trackingNumber || '—'}</td>
+                        <td>${new Date(s.createdAt).toLocaleDateString()}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterShipments(query) {
+            const q = query.toLowerCase();
+            const filtered = allShipments.filter(s => 
+                s.code.toLowerCase().includes(q) ||
+                s.status.toLowerCase().includes(q)
+            );
+            renderShipments(filtered);
+        }
+
+        async function loadSOs() {
+            const res = await apiFetch('/protection/studies');
+            if (!res || !res.ok) throw new Error('SalesService');
+            allSOs = await res.json();
+            const confirmed = allSOs.filter(so => so.status === 'CONFIRMED');
+            
+            const select = document.getElementById('ship-so');
+            select.innerHTML = '<option value="">Select sales order...</option>' +
+                confirmed.map(so => `<option value="${so.id}">${so.code} - ${so.customerName || 'ProtectionScheme ' + so.customerId}</option>`).join('');
+        }
+
+        async function loadWarehouses() {
+            const res = await apiFetch('/gis/substations');
+            if (!res || !res.ok) throw new Error('WarehouseService');
+            allWarehouses = await res.json();
+            
+            const select = document.getElementById('ship-warehouse');
+            select.innerHTML = '<option value="">Select warehouse...</option>' +
+                allWarehouses.map(w => `<option value="${w.id}">${w.code} - ${w.name}</option>`).join('');
+        }
+
+        async function loadBins(warehouseId) {
+            const res = await apiFetch(`/gis/poles?warehouseId=${warehouseId}`);
+            if (!res || !res.ok) throw new Error('WarehouseService');
+            allBins = await res.json();
+        }
+
+        async function loadSOLines() {
+            const soId = document.getElementById('ship-so').value;
+            if (!soId) {
+                document.getElementById('lines-container').innerHTML = '';
+                return;
+            }
+            
+            const so = allSOs.find(s => s.id == soId);
+            if (!so || !so.lines) {
+                document.getElementById('lines-container').innerHTML = '<p>No lines in this order</p>';
+                return;
+            }
+            
+            currentSOLines = so.lines;
+            
+            // Load bins for selected warehouse
+            const warehouseId = document.getElementById('ship-warehouse').value;
+            if (warehouseId) {
+                try {
+                    await loadBins(warehouseId);
+                } catch (err) {
+                    alertModal({ title: 'WarehouseService unavailable', body: 'Start WarehouseService and try again.' });
+                    return;
+                }
+            }
+            
+            const container = document.getElementById('lines-container');
+            container.innerHTML = currentSOLines.map((line, idx) => `
+                <div style="border: 1px solid var(--border); padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px;">
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">Line ${idx + 1}: SKU ${line.skuId}</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Qty Ordered</label>
+                            <input type="number" step="0.01" value="${line.qtyOrdered}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Qty Shipped *</label>
+                            <input type="number" step="0.01" min="0" max="${line.qtyOrdered}" 
+                                   id="line-qty-${idx}" required onchange="updateLineTotal(${idx})">
+                        </div>
+                        <div class="form-group">
+                            <label>Pole *</label>
+                            <select id="line-bin-${idx}" required>
+                                <option value="">Select bin...</option>
+                                ${allBins.map(b => `<option value="${b.id}">${b.code}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateLineTotal(idx) {
+            // Could add real-time total calculation here if needed
+        }
+
+        async function showCreateModal() {
+            document.getElementById('modal-title').textContent = 'New OutageEvent';
+            document.getElementById('shipment-form').reset();
+            document.getElementById('ship-id').value = '';
+            document.getElementById('lines-container').innerHTML = '';
+            
+            try {
+                await Promise.all([loadSOs(), loadWarehouses()]);
+            } catch (err) {
+                alertModal({ title: `${err.message} unavailable`, body: `Start ${err.message} and try again.` });
+                return;
+            }
+            
+            document.getElementById('modal-back').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-back').classList.remove('show');
+        }
+
+        document.getElementById('shipment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const soId = document.getElementById('ship-so').value;
+            const warehouseId = document.getElementById('ship-warehouse').value;
+            
+            const lines = currentSOLines.map((line, idx) => ({
+                skuId: line.skuId,
+                binId: parseInt(document.getElementById(`line-bin-${idx}`).value),
+                qtyOrdered: line.qtyOrdered,
+                qtyShipped: parseFloat(document.getElementById(`line-qty-${idx}`).value)
+            }));
+            
+            const body = {
+                salesOrderId: parseInt(soId),
+                warehouseId: parseInt(warehouseId),
+                notes: document.getElementById('ship-notes').value,
+                lines: lines
+            };
+            
+            try {
+                await apiFetch('/outage/events', { method: 'POST', body: JSON.stringify(body) });
+                closeModal();
+                loadShipments();
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        });
+
+        async function shipShipment(id) {
+            confirmDanger({
+                title: 'Ship OutageEvent',
+                body: 'This will post negative inventory adjustments and mark as shipped. Continue?',
+                confirmLabel: 'Ship',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/outage/events/${id}/ship`, { method: 'POST' });
+                        loadShipments();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        async function deleteShipment(id, code) {
+            confirmDanger({
+                title: 'Delete OutageEvent',
+                body: `Are you sure you want to delete "${code}"? This cannot be undone.`,
+                confirmLabel: 'Delete',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/outage/events/${id}`, { method: 'DELETE' });
+                        loadShipments();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modal-back').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-back') closeModal();
+        });
+
+        // Auto-refresh
+        setInterval(loadShipments, 10000);
+        window.addEventListener('focus', loadShipments);
+
+        // Initial load
+        loadShipments();
+    </script>
+</body>
+</html>

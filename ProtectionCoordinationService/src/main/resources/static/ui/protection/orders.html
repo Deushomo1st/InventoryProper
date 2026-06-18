@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection Coordination Service - Orders</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Protection Coordination Service', 
+                page: 'Orders', 
+                tabs: [
+                    {href:'/ui/protection/index.html', label:'Overview'},
+                    {href:'/ui/protection/schemes.html', label:'Customers'},
+                    {href:'/ui/protection/studies.html', label:'Orders'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="Search by code, customer..." oninput="filterOrders(this.value)">
+            <div class="actions">
+                <button class="btn-accent" onclick="showCreateModal()">+ NEW ORDER</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>ProtectionScheme</th>
+                    <th>Substation</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Lines</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="orders-tbody">
+                <tr><td colspan="8">Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Create/Edit Modal -->
+        <div id="modal-back" class="modal-back" style="display:none;">
+            <div class="modal">
+                <div class="modal-tag">Sales Order</div>
+                <div class="modal-title" id="modal-title">New Order</div>
+                <form id="order-form">
+                    <input type="hidden" id="so-id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ProtectionScheme *</label>
+                            <select id="so-customer" required>
+                                <option value="">Select customer...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Substation *</label>
+                            <select id="so-warehouse" required>
+                                <option value="">Select warehouse...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="so-notes" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Line Items</label>
+                        <div id="lines-container"></div>
+                        <button type="button" class="btn-ghost" onclick="addLine()" style="margin-top: 0.5rem;">+ Add Line</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Grand Total</label>
+                        <input type="text" id="so-total" readonly value="$0.00" style="font-weight: bold; color: var(--accent);">
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-accent">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allOrders = [];
+        let allCustomers = [];
+        let allWarehouses = [];
+        let allSkus = [];
+        let lineCounter = 0;
+
+        async function loadOrders() {
+            try {
+                const res = await apiFetch('/protection/studies');
+                if (!res || !res.ok) throw new Error('Failed to load orders');
+                allOrders = await res.json();
+                renderOrders(allOrders);
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        function renderOrders(orders) {
+            const tbody = document.getElementById('orders-tbody');
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8">No orders found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = orders.map(o => {
+                const statusClass = o.status === 'CONFIRMED' ? 'green' : o.status === 'CANCELLED' ? 'red' : 'yellow';
+                const perms = myPerms();
+                
+                let actions = '';
+                if (o.status === 'DRAFT') {
+                    actions = `
+                        <a href="#" class="action-link" onclick="confirmOrder(${o.id}); return false;">Confirm</a>
+                        <a href="#" class="action-link" onclick="editOrder(${o.id}); return false;">Edit</a>
+                        <a href="#" class="action-link danger" onclick="deleteOrder(${o.id}, '${o.code}'); return false;">Delete</a>
+                    `;
+                } else if (o.status === 'CONFIRMED' && perms.includes('so.confirm')) {
+                    actions = `<a href="#" class="action-link danger" onclick="cancelOrder(${o.id}, '${o.code}'); return false;">Cancel</a>`;
+                } else {
+                    actions = '<span style="color: var(--muted);">View only</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td>${o.code}</td>
+                        <td>${o.customerName || '—'}</td>
+                        <td>WH-${o.warehouseId}</td>
+                        <td><span class="pill ${statusClass}">${o.status}</span></td>
+                        <td>$${Number(o.totalAmount || 0).toLocaleString()}</td>
+                        <td>${o.lineCount || 0}</td>
+                        <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterOrders(query) {
+            const q = query.toLowerCase();
+            const filtered = allOrders.filter(o => 
+                o.code.toLowerCase().includes(q) ||
+                (o.customerName && o.customerName.toLowerCase().includes(q))
+            );
+            renderOrders(filtered);
+        }
+
+        async function loadCustomers() {
+            const res = await apiFetch('/protection/schemes');
+            if (!res || !res.ok) throw new Error('SalesService');
+            allCustomers = await res.json();
+        }
+
+        async function loadWarehouses() {
+            const res = await apiFetch('/gis/substations');
+            if (!res || !res.ok) throw new Error('WarehouseService');
+            allWarehouses = await res.json();
+        }
+
+        async function loadSkus() {
+            const res = await apiFetch('/asset/units');
+            if (!res || !res.ok) throw new Error('CatalogService');
+            allSkus = await res.json();
+        }
+
+        async function showCreateModal() {
+            document.getElementById('modal-title').textContent = 'New Order';
+            document.getElementById('order-form').reset();
+            document.getElementById('so-id').value = '';
+            document.getElementById('lines-container').innerHTML = '';
+            document.getElementById('so-total').value = '$0.00';
+            lineCounter = 0;
+            
+            try {
+                await Promise.all([loadCustomers(), loadWarehouses(), loadSkus()]);
+            } catch (err) {
+                alertModal({ title: `${err.message} unavailable`, body: `Start ${err.message} and try again.` });
+                return;
+            }
+            
+            // Populate dropdowns
+            const custSelect = document.getElementById('so-customer');
+            custSelect.innerHTML = '<option value="">Select customer...</option>' +
+                allCustomers.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+            
+            const whSelect = document.getElementById('so-warehouse');
+            whSelect.innerHTML = '<option value="">Select warehouse...</option>' +
+                allWarehouses.map(w => `<option value="${w.id}">${w.code} - ${w.name}</option>`).join('');
+            
+            addLine(); // Add first line
+            document.getElementById('modal-back').classList.add('show');
+        }
+
+        function addLine() {
+            lineCounter++;
+            const container = document.getElementById('lines-container');
+            const div = document.createElement('div');
+            div.className = 'form-row';
+            div.style.marginBottom = '0.5rem';
+            div.innerHTML = `
+                <div class="form-group" style="flex: 2;">
+                    <select id="line-sku-${lineCounter}" onchange="updateLineTotal(${lineCounter})" required>
+                        <option value="">Select SKU...</option>
+                        ${allSkus.map(s => `<option value="${s.id}" data-price="${s.standardCost || 0}">${s.code} - ${s.description || s.code}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <input type="number" id="line-qty-${lineCounter}" placeholder="Qty" step="0.01" min="0" onchange="updateLineTotal(${lineCounter})" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <input type="number" id="line-price-${lineCounter}" placeholder="Price" step="0.01" min="0" onchange="updateLineTotal(${lineCounter})" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <input type="text" id="line-total-${lineCounter}" readonly value="$0.00" style="text-align: right;">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function updateLineTotal(lineNum) {
+            const qty = parseFloat(document.getElementById(`line-qty-${lineNum}`).value) || 0;
+            const price = parseFloat(document.getElementById(`line-price-${lineNum}`).value) || 0;
+            const total = qty * price;
+            document.getElementById(`line-total-${lineNum}`).value = '$' + total.toFixed(2);
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+            let grandTotal = 0;
+            for (let i = 1; i <= lineCounter; i++) {
+                const totalField = document.getElementById(`line-total-${i}`);
+                if (totalField) {
+                    grandTotal += parseFloat(totalField.value.replace('$', '')) || 0;
+                }
+            }
+            document.getElementById('so-total').value = '$' + grandTotal.toFixed(2);
+        }
+
+        function closeModal() {
+            document.getElementById('modal-back').classList.remove('show');
+        }
+
+        document.getElementById('order-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('so-id').value;
+            const lines = [];
+            
+            for (let i = 1; i <= lineCounter; i++) {
+                const skuSelect = document.getElementById(`line-sku-${i}`);
+                const qtyInput = document.getElementById(`line-qty-${i}`);
+                const priceInput = document.getElementById(`line-price-${i}`);
+                
+                if (skuSelect && skuSelect.value && qtyInput && priceInput) {
+                    lines.push({
+                        skuId: parseInt(skuSelect.value),
+                        qty: parseFloat(qtyInput.value),
+                        unitPrice: parseFloat(priceInput.value)
+                    });
+                }
+            }
+            
+            const body = {
+                customerId: parseInt(document.getElementById('so-customer').value),
+                warehouseId: parseInt(document.getElementById('so-warehouse').value),
+                notes: document.getElementById('so-notes').value,
+                lines: lines
+            };
+            
+            try {
+                if (id) {
+                    await apiFetch(`/protection/studies/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+                } else {
+                    await apiFetch('/protection/studies', { method: 'POST', body: JSON.stringify(body) });
+                }
+                closeModal();
+                loadOrders();
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        });
+
+        async function confirmOrder(id) {
+            confirmDanger({
+                title: 'Confirm Order',
+                body: 'This will confirm the order and make it ready for fulfillment. Continue?',
+                confirmLabel: 'Confirm',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/protection/studies/${id}/confirm`, { method: 'POST' });
+                        loadOrders();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        async function cancelOrder(id, code) {
+            confirmDanger({
+                title: 'Cancel Order',
+                body: `Are you sure you want to cancel "${code}"?`,
+                confirmLabel: 'Cancel',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/protection/studies/${id}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 'User cancelled' }) });
+                        loadOrders();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        async function deleteOrder(id, code) {
+            confirmDanger({
+                title: 'Delete Order',
+                body: `Are you sure you want to delete "${code}"? This cannot be undone.`,
+                confirmLabel: 'Delete',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/protection/studies/${id}`, { method: 'DELETE' });
+                        loadOrders();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modal-back').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-back') closeModal();
+        });
+
+        // Auto-refresh
+        setInterval(loadOrders, 10000);
+        window.addEventListener('focus', loadOrders);
+
+        // Initial load
+        loadOrders();
+    </script>
+</body>
+</html>

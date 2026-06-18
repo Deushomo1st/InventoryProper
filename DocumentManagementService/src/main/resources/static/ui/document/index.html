@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Service — Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Document Service',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/document/index.html', label: 'Overview' },
+            { href: '/ui/document/documents.html', label: 'Suppliers' },
+            { href: '/ui/document/reviewers.html', label: 'Contacts' },
+            { href: '/ui/document/revisions.html', label: 'PriceLists' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <h1>Document Service</h1>
+    <p class="sub">Suppliers, contacts &amp; price lists. The WHO and HOW MUCH of the inventory.</p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+        <a class="tile" href="/ui/document/documents.html">
+            <div class="tile-name">Suppliers</div>
+            <div class="tile-desc">Vendor companies with codes, tax IDs, and contact information.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+        <a class="tile" href="/ui/document/reviewers.html">
+            <div class="tile-name">Contacts</div>
+            <div class="tile-desc">People at supplier companies. Sales reps, AP clerks, etc.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+        <a class="tile" href="/ui/document/revisions.html">
+            <div class="tile-name">Price Lists</div>
+            <div class="tile-desc">Document pricing for SKUs. Track unit prices and validity periods.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

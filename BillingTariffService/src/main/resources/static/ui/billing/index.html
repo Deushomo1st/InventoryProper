@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pricing &mdash; Billing & Tariff Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Pricing',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/billing/index.html', label: 'Overview' },
+            { href: '/ui/billing/schedules.html', label: 'PriceLists' },
+            { href: '/ui/billing/adjustments.html', label: 'Discounts' },
+            { href: '/ui/billing/estimate.html', label: 'Quote' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="tile-grid" style="margin-top: 2rem;">
+        <a href="/ui/billing/schedules.html" class="tile">
+            <h3>PriceLists</h3>
+            <p>Manage pricelists and entries</p>
+            <div class="tile-status">
+                <span class="dot up"></span>
+                <span>online</span>
+            </div>
+        </a>
+        <a href="/ui/billing/adjustments.html" class="tile">
+            <h3>Discounts</h3>
+            <p>Configure discount rules</p>
+            <div class="tile-status">
+                <span class="dot up"></span>
+                <span>online</span>
+            </div>
+        </a>
+        <a href="/ui/billing/estimate.html" class="tile">
+            <h3>Quote</h3>
+            <p>Interactive price calculator</p>
+            <div class="tile-status">
+                <span class="dot up"></span>
+                <span>online</span>
+            </div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CircuitDiagram Service - Movements</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'CircuitDiagram Service', 
+                page: 'Movements', 
+                tabs: [
+                    {href:'/ui/circuit/index.html', label:'Overview'},
+                    {href:'/ui/circuit/diagrams.html', label:'Movements'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="Search by code, status..." oninput="filterMovements(this.value)">
+            <div class="actions">
+                <button class="btn-accent" onclick="showCreateModal()">+ NEW MOVEMENT</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Substation</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Lines</th>
+                    <th>Executed By</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="movements-tbody">
+                <tr><td colspan="8">Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Create Modal -->
+        <div id="modal-back" class="modal-back" style="display:none;">
+            <div class="modal">
+                <div class="modal-tag">CircuitDiagram</div>
+                <div class="modal-title" id="modal-title">New CircuitDiagram</div>
+                <form id="movement-form">
+                    <div class="form-group">
+                        <label>Substation *</label>
+                        <select id="mv-warehouse" required onchange="loadBinsForWarehouse()">
+                            <option value="">Select warehouse...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Reason</label>
+                        <input type="text" id="mv-reason" placeholder="e.g., Reorganization">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="mv-notes" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Line Items</label>
+                        <div id="lines-container"></div>
+                        <button type="button" class="btn-ghost" onclick="addLine()" style="margin-top: 0.5rem;">+ Add Line</button>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-accent">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allMovements = [];
+        let allWarehouses = [];
+        let allBins = [];
+        let allSkus = [];
+        let lineCounter = 0;
+
+        async function loadMovements() {
+            try {
+                const res = await apiFetch('/circuit/diagrams');
+                if (!res || !res.ok) throw new Error('Failed to load movements');
+                allMovements = await res.json();
+                renderMovements(allMovements);
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        function renderMovements(movements) {
+            const tbody = document.getElementById('movements-tbody');
+            if (movements.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8">No movements found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = movements.map(m => {
+                const perms = myPerms();
+                let actions = '';
+                if (m.status === 'DRAFT') {
+                    actions = `
+                        ${perms.includes('movement.execute') ? `<a href="#" class="action-link" onclick="executeMovement(${m.id}); return false;">Execute</a>` : ''}
+                        <a href="#" class="action-link danger" onclick="deleteMovement(${m.id}, '${m.code}'); return false;">Delete</a>
+                    `;
+                } else {
+                    actions = '<span style="color: var(--muted);">View only</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td>${m.code}</td>
+                        <td>WH-${m.warehouseId}</td>
+                        <td><span class="pill ${m.status === 'EXECUTED' ? 'green' : 'yellow'}">${m.status}</span></td>
+                        <td>${m.reason || '—'}</td>
+                        <td>${m.lineCount || 0}</td>
+                        <td>User ${m.executedBy}</td>
+                        <td>${new Date(m.createdAt).toLocaleDateString()}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterMovements(query) {
+            const q = query.toLowerCase();
+            const filtered = allMovements.filter(m => 
+                m.code.toLowerCase().includes(q) ||
+                m.status.toLowerCase().includes(q) ||
+                (m.reason && m.reason.toLowerCase().includes(q))
+            );
+            renderMovements(filtered);
+        }
+
+        async function loadWarehouses() {
+            const res = await apiFetch('/gis/substations');
+            if (!res || !res.ok) throw new Error('WarehouseService');
+            allWarehouses = await res.json();
+            
+            const select = document.getElementById('mv-warehouse');
+            select.innerHTML = '<option value="">Select warehouse...</option>' +
+                allWarehouses.map(w => `<option value="${w.id}">${w.code} - ${w.name}</option>`).join('');
+        }
+
+        async function loadBinsForWarehouse() {
+            const warehouseId = document.getElementById('mv-warehouse').value;
+            if (!warehouseId) return;
+            
+            try {
+                const res = await apiFetch(`/gis/poles?warehouseId=${warehouseId}`);
+                if (!res || !res.ok) throw new Error('WarehouseService');
+                allBins = await res.json();
+            } catch (err) {
+                alertModal({ title: 'WarehouseService unavailable', body: 'Start WarehouseService and try again.' });
+            }
+        }
+
+        async function loadSkus() {
+            const res = await apiFetch('/asset/units');
+            if (!res || !res.ok) throw new Error('CatalogService');
+            allSkus = await res.json();
+        }
+
+        function addLine() {
+            lineCounter++;
+            const container = document.getElementById('lines-container');
+            const div = document.createElement('div');
+            div.style.cssText = 'border: 1px solid var(--border); padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px;';
+            div.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 0.5rem;">Line ${lineCounter}</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SKU *</label>
+                        <select id="line-sku-${lineCounter}" required>
+                            <option value="">Select SKU...</option>
+                            ${allSkus.map(s => `<option value="${s.id}">${s.code}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Source Pole *</label>
+                        <select id="line-source-${lineCounter}" required onchange="validateBins(${lineCounter})">
+                            <option value="">Select source bin...</option>
+                            ${allBins.map(b => `<option value="${b.id}">${b.code}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Destination Pole *</label>
+                        <select id="line-dest-${lineCounter}" required onchange="validateBins(${lineCounter})">
+                            <option value="">Select destination bin...</option>
+                            ${allBins.map(b => `<option value="${b.id}">${b.code}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qty *</label>
+                        <input type="number" step="0.01" min="0.01" id="line-qty-${lineCounter}" required>
+                    </div>
+                </div>
+                <div id="line-error-${lineCounter}" style="color: var(--danger); font-size: 0.875rem; margin-top: 0.5rem;"></div>
+            `;
+            container.appendChild(div);
+        }
+
+        function validateBins(lineNum) {
+            const source = document.getElementById(`line-source-${lineNum}`).value;
+            const dest = document.getElementById(`line-dest-${lineNum}`).value;
+            const errorDiv = document.getElementById(`line-error-${lineNum}`);
+            
+            if (source && dest && source === dest) {
+                errorDiv.textContent = 'Source and destination bins must be different';
+            } else {
+                errorDiv.textContent = '';
+            }
+        }
+
+        async function showCreateModal() {
+            document.getElementById('modal-title').textContent = 'New CircuitDiagram';
+            document.getElementById('movement-form').reset();
+            document.getElementById('lines-container').innerHTML = '';
+            lineCounter = 0;
+            
+            try {
+                await Promise.all([loadWarehouses(), loadSkus()]);
+            } catch (err) {
+                alertModal({ title: `${err.message} unavailable`, body: `Start ${err.message} and try again.` });
+                return;
+            }
+            
+            // Add one empty line by default
+            addLine();
+            
+            document.getElementById('modal-back').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-back').classList.remove('show');
+        }
+
+        document.getElementById('movement-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const warehouseId = document.getElementById('mv-warehouse').value;
+            if (!warehouseId) {
+                alertModal({ title: 'Error', body: 'Please select a warehouse' });
+                return;
+            }
+            
+            // Collect lines
+            const lines = [];
+            for (let i = 1; i <= lineCounter; i++) {
+                const skuId = document.getElementById(`line-sku-${i}`).value;
+                const sourceBinId = document.getElementById(`line-source-${i}`).value;
+                const destBinId = document.getElementById(`line-dest-${i}`).value;
+                const qty = document.getElementById(`line-qty-${i}`).value;
+                
+                if (!skuId || !sourceBinId || !destBinId || !qty) {
+                    alertModal({ title: 'Error', body: `Please fill all fields in line ${i}` });
+                    return;
+                }
+                
+                if (sourceBinId === destBinId) {
+                    alertModal({ title: 'Error', body: `Source and destination bins must be different in line ${i}` });
+                    return;
+                }
+                
+                lines.push({
+                    skuId: parseInt(skuId),
+                    sourceBinId: parseInt(sourceBinId),
+                    destinationBinId: parseInt(destBinId),
+                    qty: parseFloat(qty)
+                });
+            }
+            
+            if (lines.length === 0) {
+                alertModal({ title: 'Error', body: 'Please add at least one line' });
+                return;
+            }
+            
+            const body = {
+                warehouseId: parseInt(warehouseId),
+                reason: document.getElementById('mv-reason').value,
+                notes: document.getElementById('mv-notes').value,
+                lines: lines
+            };
+            
+            try {
+                await apiFetch('/circuit/diagrams', { method: 'POST', body: JSON.stringify(body) });
+                closeModal();
+                loadMovements();
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        });
+
+        async function executeMovement(id) {
+            confirmDanger({
+                title: 'Execute CircuitDiagram',
+                body: 'This will post paired inventory adjustments (negative from source, positive to destination). Continue?',
+                confirmLabel: 'Execute',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/circuit/diagrams/${id}/execute`, { method: 'POST' });
+                        loadMovements();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        async function deleteMovement(id, code) {
+            confirmDanger({
+                title: 'Delete CircuitDiagram',
+                body: `Are you sure you want to delete "${code}"? This cannot be undone.`,
+                confirmLabel: 'Delete',
+                onConfirm: async () => {
+                    try {
+                        await apiFetch(`/circuit/diagrams/${id}`, { method: 'DELETE' });
+                        loadMovements();
+                    } catch (err) {
+                        alertModal({ title: 'Error', body: err.message });
+                    }
+                }
+            });
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modal-back').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-back') closeModal();
+        });
+
+        // Auto-refresh
+        setInterval(loadMovements, 10000);
+        window.addEventListener('focus', loadMovements);
+
+        // Initial load
+        loadMovements();
+    </script>
+</body>
+</html>

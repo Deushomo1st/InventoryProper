@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/ApiGateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/AssetManagementService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/AuditService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/AuthPermissionsService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BillingTariffService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CableSizingService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/CircuitDesignService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DocumentManagementService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/EnergyMonitoringService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/GISMappingService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/LoadCalculationService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/NotificationService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/OutageManagementService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ProtectionCoordinationService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/RegulatoryReportingService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/SCADAIntegrationService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/UomService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/WorkOrderService/src/main/java" charset="UTF-8" />
+  </component>
+</project>

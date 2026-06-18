@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contacts — Document Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Document Service',
+        page: 'Contacts',
+        tabs: [
+            { href: '/ui/document/index.html', label: 'Overview' },
+            { href: '/ui/document/documents.html', label: 'Suppliers' },
+            { href: '/ui/document/reviewers.html', label: 'Contacts' },
+            { href: '/ui/document/revisions.html', label: 'PriceLists' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Contacts</h2>
+        <input type="text" id="contact-search" class="search-input" placeholder="Search by supplier, name, email…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW CONTACT</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Document</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Reviewer</div>
+        <form id="form">
+            <input type="hidden" id="con-id">
+            <div class="form-group">
+                <label for="con-supplier">Document</label>
+                <select id="con-supplier" required>
+                    <option value="">Select Document</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="con-name">Name</label>
+                <input type="text" id="con-name" required>
+            </div>
+            <div class="form-group">
+                <label for="con-email">Email</label>
+                <input type="email" id="con-email">
+            </div>
+            <div class="form-group">
+                <label for="con-phone">Phone</label>
+                <input type="text" id="con-phone">
+            </div>
+            <div class="form-group">
+                <label for="con-role">Role</label>
+                <input type="text" id="con-role">
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="con-active" checked>
+                <label for="con-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allContacts = [];
+    let allSuppliers = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/document/reviewers');
+            if (!res) return;
+            allContacts = await res.json();
+            renderContacts();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadSuppliers(selectedId) {
+        try {
+            const res = await apiFetch('/document/documents');
+            if (!res) return;
+            allSuppliers = await res.json();
+            const sel = document.getElementById('con-supplier');
+            sel.innerHTML = '<option value="">Select Document</option>';
+            for (const s of allSuppliers) {
+                sel.innerHTML += `<option value="${s.id}" ${s.id === selectedId ? 'selected' : ''}>${s.name}</option>`;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderContacts() {
+        const q = (document.getElementById('contact-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allContacts.filter(c =>
+                (c.supplierName || '').toLowerCase().includes(q) ||
+                (c.name || '').toLowerCase().includes(q) ||
+                (c.email || '').toLowerCase().includes(q))
+            : allContacts;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No contacts match "' + q + '"' : 'No contacts yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(c => `
+        <tr>
+          <td>${c.id}</td>
+          <td>${c.supplierName || '—'}</td>
+          <td>${c.name}</td>
+          <td>${c.email || '—'}</td>
+          <td>${c.phone || '—'}</td>
+          <td>${c.role || '—'}</td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editCon(${c.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteCon(${c.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Reviewer';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('con-id').value = '';
+        document.getElementById('con-active').checked = true;
+        loadSuppliers(null);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editCon(id) {
+        try {
+            const res = await apiFetch(`/document/reviewers/${id}`);
+            if (!res) return;
+            const c = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Reviewer';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('con-id').value = c.id;
+            document.getElementById('con-name').value = c.name;
+            document.getElementById('con-email').value = c.email || '';
+            document.getElementById('con-phone').value = c.phone || '';
+            document.getElementById('con-role').value = c.role || '';
+            document.getElementById('con-active').checked = c.active;
+            loadSuppliers(c.supplierId || null);
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load contact' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('con-id').value;
+        const body = {
+            supplierId: parseInt(document.getElementById('con-supplier').value),
+            name: document.getElementById('con-name').value,
+            email: document.getElementById('con-email').value || null,
+            phone: document.getElementById('con-phone').value || null,
+            role: document.getElementById('con-role').value || null,
+            active: document.getElementById('con-active').checked
+        };
+
+        try {
+            const url = id ? `/document/reviewers/${id}` : '/document/reviewers';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save contact', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save contact' });
+        }
+    });
+
+    function deleteCon(id) {
+        confirmDanger({
+            title: 'Delete contact?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/document/reviewers/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete contact', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete contact' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('contact-search').addEventListener('input', renderContacts);
+</script>
+</body>
+</html>

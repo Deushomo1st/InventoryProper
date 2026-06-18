@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Substation Service &mdash; Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Substation Service',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/gis/index.html', label: 'Overview' },
+            { href: '/ui/gis/substations.html', label: 'Warehouses' },
+            { href: '/ui/gis/feeders.html', label: 'Zones' },
+            { href: '/ui/gis/poles.html', label: 'Bins' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <h1>Substation Service</h1>
+    <p class="sub">Warehouses, zones, and storage bins. The WHERE of inventory.</p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+        <a class="tile" href="/ui/gis/substations.html">
+            <div class="tile-name">Warehouses</div>
+            <div class="tile-desc">Physical warehouse locations with codes and addresses.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+        <a class="tile" href="/ui/gis/feeders.html">
+            <div class="tile-name">Zones</div>
+            <div class="tile-desc">Functional areas within warehouses: receiving, bulk storage, pick face.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+        <a class="tile" href="/ui/gis/poles.html">
+            <div class="tile-name">Bins</div>
+            <div class="tile-desc">Individual storage locations within zones for precise stock placement.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

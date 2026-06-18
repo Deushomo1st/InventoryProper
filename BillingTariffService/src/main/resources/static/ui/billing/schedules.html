@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Price Lists &mdash; Billing & Tariff Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Pricing',
+        page: 'PriceLists',
+        tabs: [
+            { href: '/ui/billing/index.html', label: 'Overview' },
+            { href: '/ui/billing/schedules.html', label: 'PriceLists' },
+            { href: '/ui/billing/adjustments.html', label: 'Discounts' },
+            { href: '/ui/billing/estimate.html', label: 'Quote' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Price Lists</h2>
+        <input type="text" id="pricelist-search" class="search-input" placeholder="Search by code, name, tier…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()" data-permission="price.manage">+ NEW PRICELIST</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Tier</th>
+            <th>Currency</th>
+            <th>Valid From</th>
+            <th>Valid To</th>
+            <th>Active</th>
+            <th>Entries</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create PriceList</div>
+        <form id="form">
+            <input type="hidden" id="pl-id">
+            <div class="form-group">
+                <label for="pl-code">Code</label>
+                <input type="text" id="pl-code" required>
+            </div>
+            <div class="form-group">
+                <label for="pl-name">Name</label>
+                <input type="text" id="pl-name" required>
+            </div>
+            <div class="form-group">
+                <label for="pl-tier">ProtectionScheme Tier</label>
+                <input type="text" id="pl-tier" required>
+            </div>
+            <div class="form-group">
+                <label for="pl-currency">Currency</label>
+                <input type="text" id="pl-currency" value="USD">
+            </div>
+            <div class="form-group">
+                <label for="pl-validfrom">Valid From</label>
+                <input type="date" id="pl-validfrom">
+            </div>
+            <div class="form-group">
+                <label for="pl-validto">Valid To</label>
+                <input type="date" id="pl-validto">
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="pl-active" checked>
+                <label for="pl-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <script>
+        let allPriceLists = [];
+
+        async function load() {
+            try {
+                const res = await apiFetch('/billing/schedules');
+                if (!res) return;
+                allPriceLists = await res.json();
+                renderPriceLists();
+            } catch (err) {
+                console.error(err);
+                alertModal({title: 'Failed to load price lists', body: err.message});
+            }
+        }
+
+        function renderPriceLists() {
+            const q = (document.getElementById('pricelist-search').value || '').trim().toLowerCase();
+            const filtered = q
+                ? allPriceLists.filter(p =>
+                    (p.code || '').toLowerCase().includes(q) ||
+                    (p.name || '').toLowerCase().includes(q) ||
+                    (p.customerTier || '').toLowerCase().includes(q))
+                : allPriceLists;
+            
+            const tbody = document.getElementById('tbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px;">${q ? 'No price lists match "' + q + '"' : 'No price lists yet'}</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(p => {
+                const validRange = p.validFrom && p.validTo ? `${p.validFrom} to ${p.validTo}` : (p.validFrom ? `from ${p.validFrom}` : (p.validTo ? `until ${p.validTo}` : '&mdash;'));
+                const isEditable = getUser() && myPerms().includes('price.manage');
+                
+                let actionCell = '';
+                if (isEditable) {
+                    actionCell = `
+                        <button class="action-link" onclick="editPL(${p.id})">EDIT</button>
+                        <button class="action-link danger" onclick="deletePL(${p.id})">DELETE</button>
+                    `;
+                }
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.code}</td>
+                    <td>${p.name || '&mdash;'}</td>
+                    <td>${p.customerTier || '&mdash;'}</td>
+                    <td>${p.currency || 'USD'}</td>
+                    <td>${p.validFrom || '&mdash;'}</td>
+                    <td>${p.validTo || '&mdash;'}</td>
+                    <td>${p.active ? '<span class="pill active">Active</span>' : '<span class="pill">Inactive</span>'}</td>
+                    <td>${p.entryCount || 0}</td>
+                    <td><div class="row-actions">${actionCell}</div></td>
+                `;
+                tbody.appendChild(tr);
+            }).join('');
+        }
+
+        function showCreateModal() {
+            document.getElementById('modal-title').textContent = 'Create PriceList';
+            document.getElementById('modal-tag').textContent = 'New';
+            document.getElementById('form').reset();
+            document.getElementById('pl-id').value = '';
+            document.getElementById('pl-active').checked = true;
+            document.getElementById('pl-currency').value = 'USD';
+            document.getElementById('modal').classList.add('show');
+        }
+
+        async function editPL(id) {
+            try {
+                const res = await apiFetch(`/billing/schedules/${id}`);
+                if (!res) return;
+                const p = await res.json();
+                document.getElementById('modal-title').textContent = 'Edit PriceList';
+                document.getElementById('modal-tag').textContent = 'Edit';
+                document.getElementById('pl-id').value = p.id;
+                document.getElementById('pl-code').value = p.code;
+                document.getElementById('pl-name').value = p.name || '';
+                document.getElementById('pl-tier').value = p.customerTier || '';
+                document.getElementById('pl-currency').value = p.currency || 'USD';
+                document.getElementById('pl-validfrom').value = p.validFrom || '';
+                document.getElementById('pl-validto').value = p.validTo || '';
+                document.getElementById('pl-active').checked = p.active;
+                document.getElementById('modal').classList.add('show');
+            } catch (err) {
+                console.error(err);
+                alertModal({title: 'Failed to load price list'});
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+        document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        document.getElementById('form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const id = document.getElementById('pl-id').value;
+            const body = {
+                code: document.getElementById('pl-code').value,
+                name: document.getElementById('pl-name').value,
+                customerTier: document.getElementById('pl-tier').value,
+                currency: document.getElementById('pl-currency').value || 'USD',
+                validFrom: document.getElementById('pl-validfrom').value || null,
+                validTo: document.getElementById('pl-validto').value || null,
+                active: document.getElementById('pl-active').checked
+            };
+
+            try {
+                const url = id ? `/billing/schedules/${id}` : '/billing/schedules';
+                const method = id ? 'PUT' : 'POST';
+                const res = await apiFetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!res || !res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alertModal({title: 'Failed to save price list', body: err.message || 'Unknown error'});
+                    return;
+                }
+                closeModal();
+                load();
+            } catch (err) {
+                console.error(err);
+                alertModal({title: 'Failed to save price list'});
+            }
+        });
+
+        function deletePL(id) {
+            confirmDanger({
+                title: 'Delete price list?',
+                body: 'This is permanent. All entries will also be deleted.',
+                confirmLabel: 'DELETE',
+                onConfirm: async () => {
+                    try {
+                        const res = await apiFetch(`/billing/schedules/${id}`, {method: 'DELETE'});
+                        if (!res) return;
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => ({}));
+                            alertModal({title: 'Failed to delete price list', body: err.message});
+                            return;
+                        }
+                        load();
+                    } catch (err) {
+                        console.error(err);
+                        alertModal({title: 'Failed to delete price list'});
+                    }
+                }
+            });
+        }
+
+        load();
+        document.getElementById('pricelist-search').addEventListener('input', renderPriceLists);
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attributes — Asset Management Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Asset Management Service',
+        page: 'Attributes',
+        tabs: [
+            { href: '/ui/asset/index.html', label: 'Overview' },
+            { href: '/ui/asset/classes.html', label: 'Categories' },
+            { href: '/ui/asset/models.html', label: 'Products' },
+            { href: '/ui/asset/units.html', label: 'SKUs' },
+            { href: '/ui/asset/specs.html', label: 'Attributes' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>AssetModel Attributes</h2>
+        <div class="actions">
+            <label for="filter-product" style="font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-right: 8px;">Filter by AssetModel</label>
+            <select id="filter-product" onchange="load()">
+                <option value="">All</option>
+            </select>
+            <button class="btn-accent" onclick="showCreateModal()" style="margin-left: 16px;">+ NEW ATTRIBUTE</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>AssetModel</th>
+            <th>Key</th>
+            <th>Value</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">×</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Attribute</div>
+        <form id="form">
+            <input type="hidden" id="attr-id">
+            <div class="form-group">
+                <label for="attr-product">AssetModel</label>
+                <select id="attr-product" required>
+                    <option value="">Select</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="attr-key">Key</label>
+                <input type="text" id="attr-key" required>
+            </div>
+            <div class="form-group">
+                <label for="attr-value">Value</label>
+                <input type="text" id="attr-value" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let loadedAttrs = [];
+
+    async function load() {
+        try {
+            const productId = document.getElementById('filter-product').value;
+            const url = productId ? `/asset/specs?productId=${productId}` : '/asset/specs';
+            const res = await apiFetch(url);
+            if (!res) return;
+            const attrs = await res.json();
+            loadedAttrs = attrs;
+            const tbody = document.getElementById('tbody');
+            if (attrs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">No attributes yet</td></tr>';
+            } else {
+                tbody.innerHTML = attrs.map(a => `
+          <tr>
+            <td>${a.productId || '—'}</td>
+            <td>${a.key}</td>
+            <td>${a.value}</td>
+            <td>
+              <div class="row-actions">
+                <button class="action-link" onclick="editAttr(${a.id})">Edit</button>
+                <button class="action-link danger" onclick="deleteAttr(${a.id})">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadProducts(selectedId) {
+        try {
+            const res = await apiFetch('/asset/models');
+            if (!res) return;
+            const products = await res.json();
+            // Populate filter dropdown
+            const filter = document.getElementById('filter-product');
+            filter.innerHTML = '<option value="">All</option>';
+            products.forEach(p => {
+                filter.innerHTML += `<option value="${p.id}">${p.name} (${p.code})</option>`;
+            });
+            // Populate modal dropdown
+            const sel = document.getElementById('attr-product');
+            sel.innerHTML = '<option value="">Select</option>';
+            products.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.name} (${p.code})</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Attribute';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('attr-id').value = '';
+        loadProducts(null);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editAttr(id) {
+        const a = loadedAttrs.find(attr => attr.id === id);
+        if (!a) { alertModal({ title: 'Attribute not found in current view' }); return; }
+        document.getElementById('modal-title').textContent = 'Edit Attribute';
+        document.getElementById('modal-tag').textContent = 'Edit';
+        document.getElementById('attr-id').value = a.id;
+        document.getElementById('attr-key').value = a.key;
+        document.getElementById('attr-value').value = a.value;
+        loadProducts(a.productId);
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('attr-id').value;
+        const body = {
+            productId: parseInt(document.getElementById('attr-product').value),
+            key: document.getElementById('attr-key').value,
+            value: document.getElementById('attr-value').value
+        };
+
+        try {
+            const url = id ? `/asset/specs/${id}` : '/asset/specs';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save attribute', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save attribute' });
+        }
+    });
+
+    function deleteAttr(id) {
+        confirmDanger({
+            title: 'Delete attribute?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/asset/specs/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete attribute', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete attribute' });
+                }
+            }
+        });
+    }
+
+    // Initial load
+    loadProducts(null).then(() => load());
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Levels — Energy Monitoring Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Energy Monitoring Service',
+        page: 'Stock Levels',
+        tabs: [
+            { href: '/ui/energy/index.html', label: 'Overview' },
+            { href: '/ui/energy/current.html', label: 'Stock Levels' },
+            { href: '/ui/energy/ledger.html', label: 'Ledger' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Stock Levels</h2>
+        <input type="text" id="level-search" class="search-input" placeholder="Search by SKU, warehouse, bin…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showAdjustModal()">+ NEW ADJUSTMENT</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>SKU</th>
+            <th>Substation</th>
+            <th>Pole</th>
+            <th>Qty on Hand</th>
+            <th>Last Updated</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Stock Adjustment</div>
+        <form id="form">
+            <div class="form-group">
+                <label for="adj-sku">SKU</label>
+                <select id="adj-sku" required>
+                    <option value="">Select SKU</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="adj-warehouse">Substation</label>
+                <select id="adj-warehouse" required onchange="loadBins()">
+                    <option value="">Select Substation</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="adj-bin">Pole</label>
+                <select id="adj-bin" required>
+                    <option value="">Select Pole</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="adj-delta">Delta</label>
+                <input type="number" id="adj-delta" step="0.0001" required>
+                <small>Positive = receipt, negative = consumption</small>
+            </div>
+            <div class="form-group">
+                <label for="adj-reason">Reason Code</label>
+                <select id="adj-reason" required>
+                    <option value="RECEIPT">RECEIPT</option>
+                    <option value="ISSUE">ISSUE</option>
+                    <option value="ADJUSTMENT">ADJUSTMENT</option>
+                    <option value="DAMAGE">DAMAGE</option>
+                    <option value="EXPIRY">EXPIRY</option>
+                    <option value="COUNT">COUNT</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allLevels = [];
+    let allSkus = [];
+    let allWarehouses = [];
+    let allBins = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/energy/current');
+            if (!res) return;
+            allLevels = await res.json();
+            renderLevels();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadSkus() {
+        const res = await apiFetch('/asset/units');
+        if (!res || !res.ok) throw new Error('CatalogService');
+        allSkus = await res.json();
+    }
+
+    async function loadWarehouses() {
+        const res = await apiFetch('/gis/substations');
+        if (!res || !res.ok) throw new Error('WarehouseService');
+        allWarehouses = await res.json();
+    }
+
+    async function loadBins() {
+        const warehouseId = document.getElementById('adj-warehouse').value;
+        if (!warehouseId) {
+            document.getElementById('adj-bin').innerHTML = '<option value="">Select Pole</option>';
+            return;
+        }
+        const res = await apiFetch('/gis/poles');
+        if (!res || !res.ok) {
+            alertModal({ title: 'WarehouseService unavailable', body: 'Cannot load bins. Start WarehouseService and try again.' });
+            return;
+        }
+        allBins = await res.json();
+        const filtered = allBins.filter(b => b.warehouseId == warehouseId);
+        const sel = document.getElementById('adj-bin');
+        sel.innerHTML = '<option value="">Select Pole</option>';
+        for (const b of filtered) {
+            sel.innerHTML += `<option value="${b.id}">${b.code}</option>`;
+        }
+    }
+
+    function renderLevels() {
+        const q = (document.getElementById('level-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allLevels.filter(l =>
+                (String(l.skuId) || '').toLowerCase().includes(q) ||
+                (String(l.warehouseId) || '').toLowerCase().includes(q) ||
+                (String(l.binId) || '').toLowerCase().includes(q))
+            : allLevels;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No levels match "' + q + '"' : 'No stock levels yet — create an adjustment to get started'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(l => `
+        <tr>
+          <td>${l.skuId}</td>
+          <td>${l.warehouseId}</td>
+          <td>${l.binId}</td>
+          <td>${l.qtyOnHand}</td>
+          <td>${l.lastUpdated}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function showAdjustModal() {
+        document.getElementById('modal-title').textContent = 'Stock Adjustment';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        try {
+            await Promise.all([loadSkus(), loadWarehouses()]);
+        } catch (err) {
+            alertModal({
+                title: `${err.message} unavailable`,
+                body: `Cannot open the adjustment modal. Start ${err.message} and try again.`
+            });
+            return;
+        }
+        const skuSel = document.getElementById('adj-sku');
+        skuSel.innerHTML = '<option value="">Select SKU</option>';
+        for (const s of allSkus) {
+            skuSel.innerHTML += `<option value="${s.id}">${s.skuCode || s.code}</option>`;
+        }
+        const whSel = document.getElementById('adj-warehouse');
+        whSel.innerHTML = '<option value="">Select Substation</option>';
+        for (const w of allWarehouses) {
+            whSel.innerHTML += `<option value="${w.id}">${w.code}</option>`;
+        }
+        document.getElementById('adj-bin').innerHTML = '<option value="">Select Pole</option>';
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const body = {
+            skuId: parseInt(document.getElementById('adj-sku').value),
+            warehouseId: parseInt(document.getElementById('adj-warehouse').value),
+            binId: parseInt(document.getElementById('adj-bin').value),
+            delta: parseFloat(document.getElementById('adj-delta').value),
+            reasonCode: document.getElementById('adj-reason').value
+        };
+
+        try {
+            const res = await apiFetch('/energy/adjustments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to create adjustment', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to create adjustment' });
+        }
+    });
+
+    load();
+    document.getElementById('level-search').addEventListener('input', renderLevels);
+</script>
+</body>
+</html>

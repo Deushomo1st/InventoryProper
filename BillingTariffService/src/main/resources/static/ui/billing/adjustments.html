@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Discounts &mdash; Billing & Tariff Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Pricing',
+        page: 'Discounts',
+        tabs: [
+            { href: '/ui/billing/index.html', label: 'Overview' },
+            { href: '/ui/billing/schedules.html', label: 'PriceLists' },
+            { href: '/ui/billing/adjustments.html', label: 'Discounts' },
+            { href: '/ui/billing/estimate.html', label: 'Quote' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Discounts</h2>
+        <input type="text" id="discount-search" class="search-input" placeholder="Search by code, name…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()" data-permission="price.manage">+ NEW DISCOUNT</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th>SKU ID</th>
+            <th>Min Qty</th>
+            <th>Valid From</th>
+            <th>Valid To</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create RateAdjustment</div>
+        <form id="form">
+            <input type="hidden" id="disc-id">
+            <div class="form-group">
+                <label for="disc-code">Code</label>
+                <input type="text" id="disc-code" required>
+            </div>
+            <div class="form-group">
+                <label for="disc-name">Name</label>
+                <input type="text" id="disc-name" required>
+            </div>
+            <div class="form-group">
+                <label for="disc-type">RateAdjustment Type</label>
+                <select id="disc-type" required>
+                    <option value="PERCENT">PERCENT</option>
+                    <option value="FIXED">FIXED</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="disc-value">Value</label>
+                <input type="number" step="0.01" id="disc-value" required>
+            </div>
+            <div class="form-group">
+                <label for="disc-sku">SKU ID (optional)</label>
+                <input type="number" id="disc-sku">
+            </div>
+            <div class="form-group">
+                <label for="disc-minqty">Min Qty</label>
+                <input type="number" step="0.01" id="disc-minqty" value="1">
+            </div>
+            <div class="form-group">
+                <label for="disc-validfrom">Valid From</label>
+                <input type="date" id="disc-validfrom">
+            </div>
+            <div class="form-group">
+                <label for="disc-validto">Valid To</label>
+                <input type="date" id="disc-validto">
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="disc-active" checked>
+                <label for="disc-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allDiscounts = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/billing/adjustments');
+            if (!res) return;
+            allDiscounts = await res.json();
+            renderDiscounts();
+        } catch (err) {
+            console.error(err);
+            alertModal({title: 'Failed to load discounts', body: err.message});
+        }
+    }
+
+    function renderDiscounts() {
+        const q = (document.getElementById('discount-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allDiscounts.filter(d =>
+                (d.code || '').toLowerCase().includes(q) ||
+                (d.name || '').toLowerCase().includes(q))
+            : allDiscounts;
+        
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px;">${q ? 'No discounts match "' + q + '"' : 'No discounts yet'}</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = filtered.map(d => {
+            const validRange = d.validFrom && d.validTo ? `${d.validFrom} to ${d.validTo}` : (d.validFrom ? `from ${d.validFrom}` : (d.validTo ? `until ${d.validTo}` : '&mdash;'));
+            const isEditable = getUser() && myPerms().includes('price.manage');
+            
+            let actionCell = '';
+            if (isEditable) {
+                actionCell = `
+                    <button class="action-link" onclick="editDiscount(${d.id})">EDIT</button>
+                    <button class="action-link danger" onclick="deleteDiscount(${d.id})">DELETE</button>
+                `;
+            }
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${d.code}</td>
+                <td>${d.name || '&mdash;'}</td>
+                <td>${d.discountType || '&mdash;'}</td>
+                <td>${d.value || '&mdash;'}</td>
+                <td>${d.skuId || 'All'}</td>
+                <td>${d.minQty || '&mdash;'}</td>
+                <td>${d.validFrom || '&mdash;'}</td>
+                <td>${d.validTo || '&mdash;'}</td>
+                <td>${d.active ? '<span class="pill active">Active</span>' : '<span class="pill">Inactive</span>'}</td>
+                <td><div class="row-actions">${actionCell}</div></td>
+            `;
+            tbody.appendChild(tr);
+        }).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create RateAdjustment';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('disc-id').value = '';
+        document.getElementById('disc-active').checked = true;
+        document.getElementById('disc-minqty').value = '1';
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editDiscount(id) {
+        try {
+            const res = await apiFetch(`/billing/adjustments/${id}`);
+            if (!res) return;
+            const d = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit RateAdjustment';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('disc-id').value = d.id;
+            document.getElementById('disc-code').value = d.code;
+            document.getElementById('disc-name').value = d.name || '';
+            document.getElementById('disc-type').value = d.discountType || 'PERCENT';
+            document.getElementById('disc-value').value = d.value || '';
+            document.getElementById('disc-sku').value = d.skuId || '';
+            document.getElementById('disc-minqty').value = d.minQty || '1';
+            document.getElementById('disc-validfrom').value = d.validFrom || '';
+            document.getElementById('disc-validto').value = d.validTo || '';
+            document.getElementById('disc-active').checked = d.active;
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({title: 'Failed to load discount'});
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('disc-id').value;
+        const body = {
+            code: document.getElementById('disc-code').value,
+            name: document.getElementById('disc-name').value,
+            discountType: document.getElementById('disc-type').value,
+            value: parseFloat(document.getElementById('disc-value').value),
+            skuId: document.getElementById('disc-sku').value ? parseInt(document.getElementById('disc-sku').value) : null,
+            minQty: parseFloat(document.getElementById('disc-minqty').value) || 1,
+            validFrom: document.getElementById('disc-validfrom').value || null,
+            validTo: document.getElementById('disc-validto').value || null,
+            active: document.getElementById('disc-active').checked
+        };
+
+        try {
+            const url = id ? `/billing/adjustments/${id}` : '/billing/adjustments';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({title: 'Failed to save discount', body: err.message || 'Unknown error'});
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({title: 'Failed to save discount'});
+        }
+    });
+
+    function deleteDiscount(id) {
+        confirmDanger({
+            title: 'Delete discount?',
+            body: 'This is permanent.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/billing/adjustments/${id}`, {method: 'DELETE'});
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({title: 'Failed to delete discount', body: err.message});
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({title: 'Failed to delete discount'});
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('discount-search').addEventListener('input', renderDiscounts);
+</script>
+</body>
+</html>

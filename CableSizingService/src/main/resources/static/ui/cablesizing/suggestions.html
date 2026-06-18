@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replenishment - Suggestions</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="page">
+        <script src="/js/app.js"></script>
+        <script>
+            renderAppShell({ 
+                service: 'Replenishment', 
+                page: 'Suggestions', 
+                tabs: [
+                    {href:'/ui/cablesizing/index.html', label:'Overview'},
+                    {href:'/ui/cablesizing/requests.html', label:'Rules'},
+                    {href:'/ui/cablesizing/results.html', label:'Suggestions'}
+                ] 
+            });
+        </script>
+
+        <div class="toolbar">
+            <div class="actions">
+                <select id="filter-status">
+                    <option value="">All Statuses</option>
+                    <option value="ORDERED">Ordered</option>
+                    <option value="DISMISSED">Dismissed</option>
+                </select>
+                ${myPerms().includes('replenishment.run') ? '<button id="btn-sync" class="btn-accent">RUN SYNC</button>' : ''}
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>SKU ID</th>
+                    <th>Substation ID</th>
+                    <th>Current Qty</th>
+                    <th>Suggested Qty</th>
+                    <th>Status</th>
+                    <th>PO ID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="suggestions-body">
+                <tr><td colspan="8" style="text-align:center">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let allSuggestions = [];
+
+        async function loadSuggestions() {
+            const statusFilter = document.getElementById('filter-status').value;
+            const url = statusFilter ? `/cablesizing/results?status=${statusFilter}` : '/cablesizing/results';
+            
+            const res = await apiFetch(url);
+            if (!res || !res.ok) { alert('Failed to load suggestions'); return; }
+            allSuggestions = await res.json();
+            renderSuggestions(allSuggestions);
+        }
+
+        function renderSuggestions(suggestions) {
+            const tbody = document.getElementById('suggestions-body');
+            if (suggestions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">No suggestions found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = suggestions.map(s => {
+                const when = timeAgo(s.createdAt);
+                
+                let actions = '-';
+                    actions = `
+                        <a class="action-link" onclick="confirmDanger({title:'Order CableSizingResult',body:'Convert this suggestion to a draft PO?',confirmLabel:'Order',onConfirm:()=>orderSuggestion(${s.id})})">Order</a>
+                        &nbsp;&nbsp;
+                        <a class="action-link danger" onclick="dismissSuggestion(${s.id})">Dismiss</a>
+                    `;
+                } else if (s.status === 'ORDERED') {
+                    actions = `<span class="pill pill-success">PO #${s.createdPoId}</span>`;
+                } else {
+                    actions = `<span class="pill pill-muted">Dismissed</span>`;
+                }
+                
+                return `
+                    <tr>
+                        <td>${when}</td>
+                        <td>${s.skuId}</td>
+                        <td>${s.warehouseId}</td>
+                        <td>${s.currentQty}</td>
+                        <td>${s.suggestedQty}</td>
+                        <td><span class="${statusClass}">${s.status}</span></td>
+                        <td>${s.createdPoId || '-'}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function runSync() {
+            try {
+                const res = await apiFetch('/cablesizing/results/sync', { method: 'POST' });
+                if (res && res.ok) {
+                    const result = await res.json();
+                    alertModal({ 
+                        title: 'Sync Complete', 
+                        body: `Rules checked: ${result.rulesChecked}\nCreated: ${result.suggestionsCreated}\nExisting: ${result.suggestionsExisting}` 
+                    });
+                    await loadSuggestions();
+                } else {
+                    const err = await res.json();
+                    alertModal({ title: 'Sync Failed', body: err.message });
+                }
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        async function orderSuggestion(id) {
+            try {
+                const res = await apiFetch(`/cablesizing/results/${id}/order`, { method: 'POST' });
+                if (res && res.ok) {
+                    alertModal({ title: 'Success', body: 'CableSizingResult converted to draft PO' });
+                    await loadSuggestions();
+                } else {
+                    const err = await res.json();
+                    alertModal({ title: 'Failed', body: err.message });
+                }
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        async function dismissSuggestion(id) {
+            try {
+                const res = await apiFetch(`/cablesizing/results/${id}/dismiss`, { method: 'POST' });
+                if (res && res.ok) {
+                    await loadSuggestions();
+                } else {
+                    const err = await res.json();
+                    alertModal({ title: 'Failed', body: err.message });
+                }
+            } catch (err) {
+                alertModal({ title: 'Error', body: err.message });
+            }
+        }
+
+        // Filter change
+        document.getElementById('filter-status').addEventListener('change', loadSuggestions);
+
+        // Sync button (only if permission exists)
+        ${myPerms().includes('replenishment.run') ? 'document.getElementById("btn-sync").addEventListener("click", runSync);' : ''}
+
+        // Initial load
+        loadSuggestions();
+    </script>
+</body>
+</html>

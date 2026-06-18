@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Goods Receipts — SCADA Integration Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'SCADA Integration Service',
+        page: 'Receipts',
+        tabs: [
+            { href: '/ui/scada/index.html', label: 'Overview' },
+            { href: '/ui/scada/receipts.html', label: 'Receipts' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Goods Receipts</h2>
+        <input type="text" id="receipt-search" class="search-input" placeholder="Search by code, PO, status…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW RECEIPT</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>PO</th>
+            <th>Substation</th>
+            <th>Status</th>
+            <th>Lines</th>
+            <th>Received By</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Goods Receipt</div>
+        <form id="form">
+            <input type="hidden" id="gr-id">
+            <div class="form-group">
+                <label for="gr-po">Purchase Order</label>
+                <select id="gr-po" required onchange="loadPOLines()">
+                    <option value="">Select PO</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="gr-warehouse">Substation</label>
+                <select id="gr-warehouse" required>
+                    <option value="">Select Substation</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="gr-notes">Notes</label>
+                <input type="text" id="gr-notes">
+            </div>
+            <div class="form-group">
+                <label>Line Items (from PO)</label>
+                <div id="lines-container"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allReceipts = [];
+    let allPOs = [];
+    let allWarehouses = [];
+    let selectedPOLines = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/scada/receipts');
+            if (!res) return;
+            allReceipts = await res.json();
+            renderReceipts();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadPOs() {
+        try {
+            const res = await apiFetch('/workorder/orders');
+            if (!res || !res.ok) throw new Error('ProcurementService');
+            allPOs = await res.json();
+            const approved = allPOs.filter(po => po.status === 'APPROVED');
+            const sel = document.getElementById('gr-po');
+            sel.innerHTML = '<option value="">Select PO</option>';
+            for (const po of approved) {
+                sel.innerHTML += `<option value="${po.id}">${po.code}</option>`;
+            }
+        } catch (err) {
+            alertModal({ title: 'ProcurementService unavailable', body: 'Start ProcurementService and try again.' });
+            throw err;
+        }
+    }
+
+    async function loadWarehouses() {
+        try {
+            const res = await apiFetch('/gis/substations');
+            if (!res || !res.ok) throw new Error('WarehouseService');
+            allWarehouses = await res.json();
+            const sel = document.getElementById('gr-warehouse');
+            sel.innerHTML = '<option value="">Select Substation</option>';
+            for (const w of allWarehouses) {
+                sel.innerHTML += `<option value="${w.id}">${w.code}</option>`;
+            }
+        } catch (err) {
+            alertModal({ title: 'WarehouseService unavailable', body: 'Start WarehouseService and try again.' });
+            throw err;
+        }
+    }
+
+    async function loadPOLines() {
+        const poId = document.getElementById('gr-po').value;
+        if (!poId) {
+            document.getElementById('lines-container').innerHTML = '';
+            return;
+        }
+        try {
+            const res = await apiFetch(`/workorder/orders/${poId}`);
+            if (!res) return;
+            const po = await res.json();
+            selectedPOLines = po.lines || [];
+            renderPOLines();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load PO lines' });
+        }
+    }
+
+    function renderPOLines() {
+        const container = document.getElementById('lines-container');
+        if (selectedPOLines.length === 0) {
+            container.innerHTML = '<p style="color: var(--muted); font-size: 13px;">No lines in this PO</p>';
+            return;
+        }
+        container.innerHTML = selectedPOLines.map((line, idx) => `
+            <div class="form-row" style="margin-bottom: 8px; align-items: center;">
+                <span style="flex: 2;">SKU ${line.skuId}</span>
+                <span style="flex: 1;">Ordered: ${line.qty}</span>
+                <input type="number" class="line-qty-received" data-idx="${idx}" placeholder="Received" step="0.0001" value="0" required style="flex: 1; margin-right: 8px;">
+                <select class="line-bin" data-idx="${idx}" required style="flex: 1;">
+                    <option value="">Select Pole</option>
+                </select>
+            </div>
+        `).join('');
+
+        loadBinsForAllLines();
+    }
+
+    async function loadBinsForAllLines() {
+        try {
+            const res = await apiFetch('/gis/poles');
+            if (!res) return;
+            const allBins = await res.json();
+            selectedPOLines.forEach((line, idx) => {
+                const binSel = document.querySelector(`.line-bin[data-idx="${idx}"]`);
+                if (binSel) {
+                    binSel.innerHTML = '<option value="">Select Pole</option>';
+                    for (const b of allBins) {
+                        binSel.innerHTML += `<option value="${b.id}">${b.code}</option>`;
+                    }
+                }
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderReceipts() {
+        const q = (document.getElementById('receipt-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allReceipts.filter(r =>
+                (r.code || '').toLowerCase().includes(q) ||
+                (String(r.purchaseOrderId) || '').toLowerCase().includes(q) ||
+                (r.status || '').toLowerCase().includes(q))
+            : allReceipts;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">No receipts yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = filtered.map(r => {
+            const statusClass = r.status === 'COMPLETED' ? 'active' : '';
+            let actions = '';
+            if (r.status === 'DRAFT') {
+                actions = `<button class="action-link" onclick="editGR(${r.id})">Edit</button>
+                           <button class="action-link" onclick="completeGR(${r.id})">Complete</button>
+                           <button class="action-link danger" onclick="deleteGR(${r.id})">Delete</button>`;
+            }
+            return `
+        <tr>
+          <td>${r.code}</td>
+          <td>${r.purchaseOrderId}</td>
+          <td>${r.warehouseId}</td>
+          <td><span class="pill ${statusClass}">${r.status}</span></td>
+          <td>${r.lineCount}</td>
+          <td>${r.receivedBy}</td>
+          <td>${r.createdAt}</td>
+          <td><div class="row-actions">${actions}</div></td>
+        </tr>
+      `;
+        }).join('');
+    }
+
+    async function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Goods Receipt';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('gr-id').value = '';
+        document.getElementById('lines-container').innerHTML = '';
+
+        try {
+            await Promise.all([loadPOs(), loadWarehouses()]);
+        } catch (err) {
+            return;
+        }
+
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editGR(id) {
+        try {
+            const res = await apiFetch(`/scada/receipts/${id}`);
+            if (!res) return;
+            const gr = await res.json();
+            if (gr.status !== 'DRAFT') {
+                alertModal({ title: 'Cannot edit', body: 'Only DRAFT receipts can be edited.' });
+                return;
+            }
+
+            document.getElementById('modal-title').textContent = 'Edit Goods Receipt';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('gr-id').value = gr.id;
+
+            try {
+                await Promise.all([loadPOs(), loadWarehouses()]);
+            } catch (err) {
+                return;
+            }
+
+            document.getElementById('gr-po').value = gr.purchaseOrderId;
+            document.getElementById('gr-warehouse').value = gr.warehouseId;
+            document.getElementById('gr-notes').value = gr.notes || '';
+
+            await loadPOLines();
+
+            if (gr.lines && gr.lines.length > 0) {
+                gr.lines.forEach((line, idx) => {
+                    const qtyInput = document.querySelector(`.line-qty-received[data-idx="${idx}"]`);
+                    const binSel = document.querySelector(`.line-bin[data-idx="${idx}"]`);
+                    if (qtyInput) qtyInput.value = line.qtyReceived;
+                    if (binSel) binSel.value = line.binId;
+                });
+            }
+
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load receipt' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('gr-id').value;
+        const lines = [];
+        selectedPOLines.forEach((poLine, idx) => {
+            const qtyReceived = parseFloat(document.querySelector(`.line-qty-received[data-idx="${idx}"]`).value) || 0;
+            const binId = parseInt(document.querySelector(`.line-bin[data-idx="${idx}"]`).value);
+            if (binId) {
+                lines.push({
+                    skuId: poLine.skuId,
+                    qtyOrdered: poLine.qty,
+                    qtyReceived: qtyReceived,
+                    binId: binId
+                });
+            }
+        });
+
+        const body = {
+            purchaseOrderId: parseInt(document.getElementById('gr-po').value),
+            warehouseId: parseInt(document.getElementById('gr-warehouse').value),
+            notes: document.getElementById('gr-notes').value || null,
+            lines: lines
+        };
+
+        try {
+            const url = id ? `/scada/receipts/${id}` : '/scada/receipts';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save receipt', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save receipt' });
+        }
+    });
+
+    async function completeGR(id) {
+        confirmDanger({
+            title: 'Complete receipt?',
+            body: 'This will post inventory adjustments for all received quantities. Cannot be undone.',
+            confirmLabel: 'COMPLETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/scada/receipts/${id}/complete`, { method: 'POST' });
+                    if (!res || !res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to complete receipt', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to complete receipt' });
+                }
+            }
+        });
+    }
+
+    function deleteGR(id) {
+        confirmDanger({
+            title: 'Delete receipt?',
+            body: 'This is permanent. Only DRAFT receipts can be deleted.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/scada/receipts/${id}`, { method: 'DELETE' });
+                    if (!res || !res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete receipt', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete receipt' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('receipt-search').addEventListener('input', renderReceipts);
+</script>
+</body>
+</html>

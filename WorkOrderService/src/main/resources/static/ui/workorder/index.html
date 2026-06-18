@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Work Order Service — Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Work Order Service',
+        page: 'Overview',
+        tabs: [
+            { href: '/ui/workorder/index.html', label: 'Overview' },
+            { href: '/ui/workorder/orders.html', label: 'Orders' },
+            { href: '/ui/workorder/approvals.html', label: 'Approvals' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <h1>Work Order Service</h1>
+    <p class="sub">Purchase orders &amp; approvals. The buying workflow for inventory replenishment.</p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+        <a class="tile" href="/ui/workorder/orders.html">
+            <div class="tile-name">Orders</div>
+            <div class="tile-desc">Create, submit, approve purchase orders. Multi-line items with supplier and warehouse selection.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+        <a class="tile" href="/ui/workorder/approvals.html">
+            <div class="tile-name">Approvals</div>
+            <div class="tile-desc">Audit trail of all approval/rejection actions. Who approved what and when.</div>
+            <div class="tile-status"><span class="dot up"></span><span>ready</span></div>
+        </a>
+    </div>
+</main>
+</body>
+</html>

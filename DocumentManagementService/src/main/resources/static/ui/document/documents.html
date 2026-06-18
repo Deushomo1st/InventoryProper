@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Suppliers — Document Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<script src="/js/app.js"></script>
+<script>
+    renderAppShell({
+        service: 'Document Service',
+        page: 'Suppliers',
+        tabs: [
+            { href: '/ui/document/index.html', label: 'Overview' },
+            { href: '/ui/document/documents.html', label: 'Suppliers' },
+            { href: '/ui/document/reviewers.html', label: 'Contacts' },
+            { href: '/ui/document/revisions.html', label: 'PriceLists' }
+        ]
+    });
+</script>
+
+<main class="page">
+    <div class="toolbar">
+        <h2>Suppliers</h2>
+        <input type="text" id="supplier-search" class="search-input" placeholder="Search by code, name, tax ID…" autocomplete="off">
+        <div class="actions">
+            <button class="btn-accent" onclick="showCreateModal()">+ NEW SUPPLIER</button>
+        </div>
+    </div>
+
+    <table class="data-table" id="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Tax ID</th>
+            <th>Status</th>
+            <th>Address</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</main>
+
+<div class="modal-back" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-x" onclick="closeModal()">&times;</button>
+        <div class="modal-tag" id="modal-tag">New</div>
+        <div class="modal-title" id="modal-title">Create Document</div>
+        <form id="form">
+            <input type="hidden" id="sup-id">
+            <div class="form-group">
+                <label for="sup-code">Code</label>
+                <input type="text" id="sup-code">
+                <small>Auto-generated as <code>SUP-NNN</code> when creating; shown here only when editing.</small>
+            </div>
+            <div class="form-group">
+                <label for="sup-name">Name</label>
+                <input type="text" id="sup-name" required>
+            </div>
+            <div class="form-group">
+                <label for="sup-taxid">Tax ID</label>
+                <input type="text" id="sup-taxid">
+            </div>
+            <div class="form-group">
+                <label for="sup-address">Address</label>
+                <input type="text" id="sup-address">
+            </div>
+            <div class="form-group">
+                <label for="sup-status">Status</label>
+                <select id="sup-status">
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="sup-active" checked>
+                <label for="sup-active">Active</label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-accent">SAVE</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allSuppliers = [];
+
+    async function load() {
+        try {
+            const res = await apiFetch('/document/documents');
+            if (!res) return;
+            allSuppliers = await res.json();
+            renderSuppliers();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderSuppliers() {
+        const q = (document.getElementById('supplier-search').value || '').trim().toLowerCase();
+        const filtered = q
+            ? allSuppliers.filter(s =>
+                (s.code || '').toLowerCase().includes(q) ||
+                (s.name || '').toLowerCase().includes(q) ||
+                (s.taxId || '').toLowerCase().includes(q))
+            : allSuppliers;
+        const tbody = document.getElementById('tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">${q ? 'No suppliers match "' + q + '"' : 'No suppliers yet'}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.code}</td>
+          <td>${s.name}</td>
+          <td>${s.taxId || '—'}</td>
+          <td><span class="pill ${s.status === 'ACTIVE' ? 'active' : 'inactive'}">${s.status}</span></td>
+          <td>${s.address || '—'}</td>
+          <td>
+            <div class="row-actions">
+              <button class="action-link" onclick="editSup(${s.id})">Edit</button>
+              <button class="action-link danger" onclick="deleteSup(${s.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showCreateModal() {
+        document.getElementById('modal-title').textContent = 'Create Document';
+        document.getElementById('modal-tag').textContent = 'New';
+        document.getElementById('form').reset();
+        document.getElementById('sup-id').value = '';
+        document.getElementById('sup-active').checked = true;
+        document.getElementById('sup-status').value = 'ACTIVE';
+        document.getElementById('sup-code').parentElement.style.display = 'none';
+        document.getElementById('modal').classList.add('show');
+    }
+
+    async function editSup(id) {
+        try {
+            const res = await apiFetch(`/document/documents/${id}`);
+            if (!res) return;
+            const s = await res.json();
+            document.getElementById('modal-title').textContent = 'Edit Document';
+            document.getElementById('modal-tag').textContent = 'Edit';
+            document.getElementById('sup-id').value = s.id;
+            document.getElementById('sup-code').value = s.code;
+            document.getElementById('sup-name').value = s.name;
+            document.getElementById('sup-taxid').value = s.taxId || '';
+            document.getElementById('sup-address').value = s.address || '';
+            document.getElementById('sup-status').value = s.status;
+            document.getElementById('sup-active').checked = s.active;
+            document.getElementById('sup-code').parentElement.style.display = '';
+            document.getElementById('modal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to load supplier' });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.getElementById('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('sup-id').value;
+        const body = {
+            name: document.getElementById('sup-name').value,
+            taxId: document.getElementById('sup-taxid').value || null,
+            address: document.getElementById('sup-address').value || null,
+            status: document.getElementById('sup-status').value,
+            active: document.getElementById('sup-active').checked
+        };
+        if (id) {
+            body.code = document.getElementById('sup-code').value;
+        }
+
+        try {
+            const url = id ? `/document/documents/${id}` : '/document/documents';
+            const method = id ? 'PUT' : 'POST';
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res || !res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alertModal({ title: 'Failed to save supplier', body: err.message });
+                return;
+            }
+            closeModal();
+            load();
+        } catch (err) {
+            console.error(err);
+            alertModal({ title: 'Failed to save supplier' });
+        }
+    });
+
+    function deleteSup(id) {
+        confirmDanger({
+            title: 'Delete supplier?',
+            body: 'This is permanent. All contacts and price lists for this supplier will also be deleted.',
+            confirmLabel: 'DELETE',
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(`/document/documents/${id}`, { method: 'DELETE' });
+                    if (!res) return;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alertModal({ title: 'Failed to delete supplier', body: err.message });
+                        return;
+                    }
+                    load();
+                } catch (err) {
+                    console.error(err);
+                    alertModal({ title: 'Failed to delete supplier' });
+                }
+            }
+        });
+    }
+
+    load();
+    document.getElementById('supplier-search').addEventListener('input', renderSuppliers);
+</script>
+</body>
+</html>
